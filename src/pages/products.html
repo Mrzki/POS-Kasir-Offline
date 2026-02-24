@@ -1,0 +1,143 @@
+<div class="h-[calc(100vh-60px)] flex flex-col bg-slate-50 p-4 md:p-6 overflow-hidden gap-6">
+  <!-- HEADER & ACTIONS -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 flex-none">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-bold">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+      </div>
+      <h1 class="text-xl font-bold text-slate-800 tracking-tight">MANAJEMEN BARANG</h1>
+    </div>
+
+    <div class="flex items-center gap-3 w-full md:w-auto">
+      <div class="relative flex-1 md:w-64">
+        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </div>
+        <input
+          type="text"
+          id="search-product"
+          placeholder="Cari barcode / nama..."
+          class="w-full pl-10 pr-4 py-2 bg-white border border-slate-300 rounded-xl text-sm font-medium text-slate-700 shadow-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
+        />
+      </div>
+      
+      <button id="btn-add-product" class="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 ring-offset-2 whitespace-nowrap">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        <span>Tambah</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Notifikasi / Feedback (akan di-toggle vi class active di JS) -->
+  <div id="products-message" role="status" aria-live="polite" class="hidden"></div>
+
+  <!-- TABLE CARD -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col flex-1 min-h-0">
+    <div class="overflow-auto custom-scrollbar">
+      <table class="w-full text-left border-collapse transition-opacity">
+        <thead class="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
+          <tr>
+            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">Nama Barang</th>
+            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">Barcode</th>
+            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">Kategori</th>
+            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">Harga</th>
+            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">Satuan</th>
+            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">Status</th>
+            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right whitespace-nowrap">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="products-body" class="divide-y divide-slate-100 bg-white">
+          <!-- Diisi via JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MODAL TAMBAH/EDIT -->
+  <!-- Gunakan class `.active` di JS untuk memunculkan modal (hapus .hidden) -->
+  <div id="product-modal" class="modal">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden transform scale-95 transition-transform duration-200 border border-slate-200 modal-content-custom">
+      <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+        <h3 id="modal-title" class="font-bold text-lg text-slate-800 tracking-tight">Tambah Barang</h3>
+      </div>
+      
+      <div class="p-6 flex flex-col gap-4">
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Nama Produk <span class="text-red-500">*</span></label>
+          <input id="product-name" type="text" placeholder="Masukkan nama..." class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all placeholder:font-medium placeholder:text-slate-400" />
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Barcode</label>
+          <input id="product-barcode" type="text" placeholder="Scan barcode (Opsional)" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all placeholder:font-medium placeholder:text-slate-400" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Kategori</label>
+            <select id="product-category" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all appearance-none cursor-pointer pr-10 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_10px_center]">
+              <!-- Options -->
+            </select>
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Harga Jual <span class="text-red-500">*</span></label>
+            <input id="product-price" type="number" min="0" placeholder="0" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all placeholder:font-medium placeholder:text-slate-400" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 items-end">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Satuan</label>
+            <select id="product-unit" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all appearance-none cursor-pointer pr-10 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_10px_center]">
+              <option value="pcs">pcs</option>
+              <option value="kg">kg</option>
+              <option value="gr">gram</option>
+              <option value="liter">liter</option>
+              <option value="pack">pack</option>
+            </select>
+          </div>
+          <div class="flex items-center h-10 w-full pl-2">
+            <label class="flex items-center gap-3 cursor-pointer group">
+              <div class="relative flex items-center justify-center w-5 h-5">
+                <input type="checkbox" id="product-weighed" class="peer appearance-none w-5 h-5 border-2 border-slate-300 rounded focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 checked:bg-emerald-600 checked:border-emerald-600 transition-all cursor-pointer" />
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" class="absolute pointer-events-none text-white opacity-0 peer-checked:opacity-100 transition-opacity"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span class="text-sm font-semibold text-slate-600 group-hover:text-slate-800 transition-colors">Barang Ecer / Timbang</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3">
+        <button id="cancel-product" class="px-5 py-2.5 bg-white border border-slate-300 text-slate-700 text-sm font-bold rounded-xl hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-200">
+          Batal
+        </button>
+        <button id="save-product" class="px-5 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-xl shadow-sm hover:bg-emerald-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 ring-offset-2">
+          Simpan Barang
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL KONFIRMASI -->
+  <div id="product-confirm-modal" class="modal">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 overflow-hidden transform scale-95 transition-transform duration-200 border border-slate-200 text-center modal-content-custom">
+      <div class="p-6 flex flex-col items-center justify-center gap-4">
+        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center text-red-600 mb-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-power"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/></svg>
+        </div>
+        <h3 id="product-confirm-title" class="font-bold text-xl text-slate-800 tracking-tight">Konfirmasi Status</h3>
+        <p id="product-confirm-text" class="text-sm font-medium text-slate-500 max-w-[280px] mx-auto leading-relaxed"></p>
+      </div>
+      
+      <div class="px-6 py-5 bg-slate-50 border-t border-slate-100 flex flex-col gap-3">
+        <button id="confirm-product-toggle" class="w-full px-5 py-3 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-xl shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 ring-offset-2">
+          Ya, Ubah Status
+        </button>
+        <button id="cancel-product-toggle" class="w-full px-4 py-2 bg-transparent text-slate-500 hover:text-slate-700 text-sm font-bold rounded-xl transition-colors focus:outline-none">
+          Batal
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

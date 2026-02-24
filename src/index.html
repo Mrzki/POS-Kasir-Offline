@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>POS Kasir</title>
+    <link rel="stylesheet" href="css/output.css" />
+  </head>
+  <body>
+    <button id="hamburger" class="hamburger" aria-label="Buka sidebar">
+      &#9776;
+    </button>
+
+    <div id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <strong>POS Menu</strong>
+        <button id="close-sidebar" aria-label="Tutup sidebar">&times;</button>
+      </div>
+
+      <ul class="sidebar-menu">
+        <li data-page="dashboard">Dashboard</li>
+        <li data-page="kasir">Kasir</li>
+
+        <li class="submenu">
+          Database
+          <ul>
+            <li data-page="products">Manajemen Barang</li>
+            <li data-page="stocks">Manajemen Stok</li>
+          </ul>
+        </li>
+
+        <li class="submenu">
+          Laporan
+          <ul>
+            <li data-page="transactions">Data Transaksi</li>
+            <li data-page="sales">Penjualan Barang</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+
+    <div id="overlay" class="overlay"></div>
+
+    <div id="app" class="app-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/date-picker.js"></script>
+    <script src="js/receiptRenderer.js"></script>
+    <script src="js/renderer.js"></script>
+  </body>
+</html>

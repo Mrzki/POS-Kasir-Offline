@@ -1,0 +1,82 @@
+<div class="h-[calc(100vh-60px)] flex flex-col bg-slate-50 p-4 md:p-6 overflow-hidden gap-6">
+  <!-- HEADER & ACTIONS -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 flex-none">
+    <div class="flex items-center gap-4">
+      <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white font-bold shadow-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-boxes"><path d="M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42Z"/><path d="m7 16.5-4.74-2.85"/><path d="m7 16.5 5-3"/><path d="M7 16.5v5.17"/><path d="M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3Z"/><path d="m17 16.5-5-3"/><path d="m17 16.5 4.74-2.85"/><path d="M17 16.5v5.17"/><path d="M7.97 4.42A2 2 0 0 0 7 6.13v4.37l5 3 5-3V6.13a2 2 0 0 0-.97-1.71l-3-1.8a2 2 0 0 0-2.06 0l-3 1.8Z"/><path d="M12 8 7.26 5.15"/><path d="m12 8 4.74-2.85"/><path d="M12 13.5V8"/></svg>
+      </div>
+      <div>
+        <h1 class="text-xl font-bold text-slate-800 tracking-tight">MANAJEMEN STOK</h1>
+        <p class="text-sm font-medium text-slate-500 mt-0.5">Kelola stok masuk dan keluar berbasis batch FIFO.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="stock-message" role="status" aria-live="polite" class="hidden"></div>
+
+  <!-- TABLE CARD -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col flex-1 min-h-0">
+    
+    <!-- TOOLBAR (Search & Count) -->
+    <div class="flex flex-col md:flex-row items-center justify-between gap-4 p-4 border-b border-slate-100 bg-white flex-none">
+      <div class="relative w-full md:w-80">
+        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </div>
+        <input
+          id="stock-search"
+          type="search"
+          placeholder="Cari produk, kategori, barcode..."
+          autocomplete="off"
+          class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 outline-none focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all placeholder:font-medium placeholder:text-slate-400"
+        />
+      </div>
+      <div id="stock-count" class="px-4 py-1.5 bg-slate-100 rounded-lg text-xs font-bold text-slate-600 border border-slate-200 whitespace-nowrap">
+        0 produk
+      </div>
+    </div>
+
+    <!-- TABLE WRAPPER -->
+    <div class="overflow-auto custom-scrollbar flex-1 relative">
+      <table class="w-full text-left border-collapse min-w-[700px]">
+        <thead class="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
+          <tr>
+            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">Nama Produk</th>
+            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">Kategori</th>
+            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">Satuan</th>
+            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap text-right">Total Stok</th>
+            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap text-center w-40">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="stock-products-body" class="divide-y divide-slate-100 bg-white">
+          <!-- Diisi via JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MODAL: DULU SIDEBAR, SEKARANG MODAL CENTER -->
+  <div id="stock-modal" class="modal">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] flex flex-col overflow-hidden transform scale-95 transition-transform duration-200 border border-slate-200 modal-content-custom">
+      
+      <!-- MODAL HEADER -->
+      <div class="px-6 py-5 border-b border-slate-100 bg-slate-50 flex items-center justify-between flex-none sticky top-0 z-20">
+        <h3 id="stock-modal-title" class="font-bold text-lg text-slate-800 tracking-tight">Detail Stok</h3>
+        <button
+          id="stock-modal-close"
+          type="button"
+          class="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-colors focus:outline-none"
+          aria-label="Tutup modal"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+      
+      <!-- MODAL CONTENT (Dikontrol via JS) -->
+      <div id="stock-modal-content" class="p-6 overflow-y-auto custom-scrollbar flex flex-col gap-6 relative">
+        <!-- Diisi konten forms/tables via JS -->
+      </div>
+    </div>
+  </div>
+
+</div>

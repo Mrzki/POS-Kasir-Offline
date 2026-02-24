@@ -1,0 +1,90 @@
+<div class="h-full flex flex-col p-6 bg-slate-50 gap-6">
+  <div class="flex justify-between items-center">
+    <h2 class="text-2xl font-bold tracking-tight text-slate-800">Data Transaksi</h2>
+  </div>
+
+  <div id="transactions-message" class="products-message" role="status"></div>
+
+  <!-- Filters & Search -->
+  <div class="flex flex-col md:flex-row gap-4 items-end">
+    <div class="flex gap-4 bg-white p-3 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+      <div class="flex flex-col gap-1.5 flex-1 md:flex-none">
+        <label for="transaction-date-start" class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tanggal Mulai</label>
+        <input type="text" id="transaction-date-start" placeholder="DD-MM-YYYY" readonly class="text-sm border border-slate-300 rounded-lg px-3 py-2 bg-slate-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-shadow w-full md:w-36" />
+      </div>
+      <div class="flex flex-col gap-1.5 flex-1 md:flex-none">
+        <label for="transaction-date-end" class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tanggal Selesai</label>
+        <input type="text" id="transaction-date-end" placeholder="DD-MM-YYYY" readonly class="text-sm border border-slate-300 rounded-lg px-3 py-2 bg-slate-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-shadow w-full md:w-36" />
+      </div>
+      <button id="btn-load-transactions" type="button" class="h-[38px] px-4 self-end bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 flex-shrink-0">
+        Tampilkan
+      </button>
+    </div>
+
+    <div class="hidden md:block flex-1"></div>
+
+    <div class="flex flex-col gap-1.5 items-end w-full md:w-auto">
+        <div class="relative w-full md:max-w-sm">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <input type="text" id="transaction-search" placeholder="Cari nomor transaksi..." class="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm transition-shadow" />
+        </div>
+        <span id="transaction-search-count" class="text-xs text-slate-500 font-medium h-4 w-full text-right"></span>
+    </div>
+  </div>
+
+  <!-- Table Card -->
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex-1 flex flex-col min-h-[400px]">
+    <div class="overflow-y-auto custom-scrollbar flex-1 relative">
+      <table class="w-full text-left border-collapse min-w-[800px]">
+        <thead class="sticky top-0 bg-slate-50 shadow-sm z-10">
+          <tr>
+            <th class="py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200">Nomor Transaksi</th>
+            <th class="py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200">Tanggal &amp; Jam</th>
+            <th class="py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200">Total</th>
+            <th class="py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200">Status</th>
+            <th class="py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="transactions-body" class="divide-y divide-slate-100">
+          <tr>
+            <td colspan="5" class="py-8 text-center text-slate-500 font-medium">Belum ada data</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div id="detail-modal" class="modal">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col m-4 overflow-hidden transform transition-all">
+      <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
+          <h3 class="text-lg font-bold text-slate-800">Detail Transaksi</h3>
+      </div>
+      
+      <div id="detail-content" class="p-6 overflow-y-auto custom-scrollbar"></div>
+
+      <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex justify-end gap-3">
+        <button id="close-detail" type="button" class="px-5 py-2 text-sm font-semibold rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-200">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Void Modal -->
+  <div id="void-modal" class="modal">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md m-4 overflow-hidden transform transition-all">
+      <div class="p-6 pb-4">
+          <h3 class="text-lg font-bold text-slate-800 mb-2">Void Transaksi</h3>
+          <p id="void-info" class="text-sm text-slate-600"></p>
+      </div>
+
+      <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+        <button id="cancel-void" type="button" class="px-4 py-2 text-sm font-semibold rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-200">Batal</button>
+        <button id="confirm-void" type="button" class="px-4 py-2 text-sm font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 shadow-sm">Ya, Void</button>
+      </div>
+    </div>
+  </div>
+</div>

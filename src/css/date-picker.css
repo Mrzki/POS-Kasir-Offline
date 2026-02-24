@@ -1,0 +1,182 @@
+/* Date Range Picker Styles */
+.date-picker-modal {
+  @apply fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/50 opacity-0 pointer-events-none transition-all duration-200 backdrop-blur-sm;
+}
+
+.date-picker-modal.visible {
+  @apply opacity-100 pointer-events-auto;
+}
+
+.date-picker-content {
+  @apply bg-white rounded-2xl shadow-xl flex flex-col w-[800px] max-w-[95vw] max-h-[90vh] overflow-hidden transform scale-95 transition-transform duration-200;
+}
+
+.date-picker-modal.visible .date-picker-content,
+.date-picker-modal.visible .single-date-picker-content {
+  @apply scale-100;
+}
+
+/* Header */
+.date-picker-header {
+  @apply p-5 border-b border-slate-200 flex gap-4 items-center bg-slate-50;
+}
+
+.date-picker-input-group {
+  @apply flex flex-col gap-1.5 flex-1 relative;
+}
+
+.date-picker-input-group label {
+  @apply text-xs font-semibold text-slate-500 uppercase tracking-wider;
+}
+
+.date-picker-input-group input {
+  @apply p-2.5 bg-white border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 outline-none transition-all w-full;
+}
+
+.date-picker-input-group input:focus {
+  @apply border-emerald-500 ring-2 ring-emerald-200;
+}
+
+.date-picker-input-group input.invalid {
+  @apply border-red-500 bg-red-50 text-red-700;
+}
+
+/* Body Layout */
+.date-picker-body {
+  @apply flex flex-1 overflow-auto bg-white;
+}
+
+/* Sidebar Presets */
+.date-picker-sidebar {
+  @apply w-40 border-r border-slate-200 py-3 bg-slate-50 shrink-0;
+}
+
+.date-picker-preset-btn {
+  @apply block w-full text-left px-4 py-2.5 text-sm font-semibold text-slate-600 cursor-pointer transition-colors outline-none;
+}
+
+.date-picker-sidebar .date-picker-preset-btn:hover {
+  @apply bg-slate-100 text-slate-800;
+}
+
+.date-picker-sidebar .date-picker-preset-btn.active {
+  @apply bg-emerald-50 text-emerald-700 border-r-2 border-emerald-600 font-bold;
+}
+
+/* Calendars Container */
+.date-picker-calendars {
+  @apply flex flex-1 flex-wrap gap-6 p-6 justify-center bg-white;
+}
+
+.calendar-wrapper {
+  @apply w-[280px];
+}
+
+.calendar-header {
+  @apply flex justify-between items-center mb-4;
+}
+
+.calendar-month-year {
+  @apply font-bold text-slate-800 tracking-tight;
+}
+
+.calendar-nav-btn {
+  @apply bg-white border border-slate-200 cursor-pointer text-slate-500 p-1.5 rounded-lg transition-colors flex items-center justify-center h-8 w-8 hover:bg-slate-50 hover:text-slate-800;
+}
+
+.calendar-grid {
+  @apply grid grid-cols-7 gap-1;
+}
+
+.calendar-day-header {
+  @apply text-xs font-semibold text-slate-400 text-center py-2;
+}
+
+.calendar-day {
+  @apply aspect-square flex items-center justify-center text-sm font-medium text-slate-700 cursor-pointer rounded-lg relative transition-all;
+}
+
+.calendar-day:not(.empty):hover {
+  @apply bg-slate-100 text-slate-900 border border-slate-200 shadow-sm;
+}
+
+.calendar-day.empty {
+  @apply cursor-default hover:bg-transparent hover:border-transparent hover:shadow-none;
+}
+
+/* Selection Styles */
+.calendar-day.in-range {
+  @apply bg-emerald-50 text-emerald-700 rounded-none border border-emerald-50;
+}
+
+.calendar-day.start-date {
+  @apply bg-emerald-600 text-white rounded-l-lg rounded-r-none border border-emerald-600 hover:bg-emerald-700 hover:text-white shadow-sm;
+}
+
+.calendar-day.end-date {
+  @apply bg-emerald-600 text-white rounded-r-lg rounded-l-none border border-emerald-600 hover:bg-emerald-700 hover:text-white shadow-sm;
+}
+
+.calendar-day.start-date.end-date {
+  @apply rounded-lg;
+}
+
+/* Footer */
+.date-picker-footer {
+  @apply p-4 border-t border-slate-200 flex justify-end gap-3 bg-slate-50;
+}
+
+.btn {
+  @apply px-5 py-2.5 rounded-xl text-sm font-bold cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-emerald-200 flex items-center justify-center;
+}
+
+.btn-neutral {
+  @apply bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400;
+}
+
+.btn-primary {
+  @apply bg-emerald-600 text-white border border-emerald-600 shadow-sm hover:bg-emerald-700 hover:border-emerald-700;
+}
+
+/* ============================
+   Single Date Picker Styles
+   ============================ */
+.single-date-picker-content {
+  @apply bg-white rounded-2xl shadow-xl flex flex-col w-[360px] max-w-[95vw] max-h-[90vh] overflow-hidden transform scale-95 transition-transform duration-200;
+}
+
+.single-date-picker-header {
+  @apply p-4 border-b border-slate-200 bg-slate-50;
+}
+
+.single-date-picker-header .date-picker-input-group {
+  @apply flex-none;
+}
+
+.single-date-picker-body {
+  @apply flex flex-col overflow-auto bg-white;
+}
+
+.single-date-picker-presets {
+  @apply flex flex-wrap gap-2 p-4 border-b border-slate-100 bg-white;
+}
+
+.single-date-picker-presets .date-picker-preset-btn {
+  @apply w-auto px-4 py-1.5 rounded-full border border-slate-200 text-xs font-semibold text-slate-600 text-center hover:bg-slate-50 hover:text-slate-800;
+}
+
+.single-date-picker-presets .date-picker-preset-btn.active {
+  @apply bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm ring-1 ring-emerald-500 font-bold;
+}
+
+.single-date-picker-calendar {
+  @apply p-5 bg-white;
+}
+
+.calendar-day.selected-date {
+  @apply bg-emerald-600 text-white rounded-lg border border-emerald-600 hover:bg-emerald-700 shadow-sm;
+}
+
+.calendar-day.today-marker:not(.selected-date) {
+  @apply text-emerald-600 font-bold border-2 border-emerald-500 ring-2 ring-emerald-100;
+}

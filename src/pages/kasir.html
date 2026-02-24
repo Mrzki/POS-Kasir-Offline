@@ -1,0 +1,238 @@
+<div class="h-[calc(100vh-60px)] flex flex-col bg-slate-50">
+  <!-- Header -->
+  <div class="bg-white h-16 px-6 flex items-center justify-between border-b border-slate-200 shadow-sm flex-none">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-bold">POS</div>
+      <h1 class="text-xl font-bold text-slate-800 tracking-tight">KASIR TOKO</h1>
+    </div>
+    <div class="text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200 shadow-sm">
+      <span id="session-indicator">Mode: Input Barang</span>
+    </div>
+  </div>
+
+  <div id="kasir-warning" class="kasir-warning" role="status" aria-live="polite"></div>
+
+  <!-- Session 1: Input -->
+  <div id="session-input" class="session-card active" data-session="INPUT">
+    <div class="flex-1 overflow-hidden p-4 md:p-6 flex flex-col gap-4">
+      <!-- Input Bar -->
+      <div class="flex flex-col md:flex-row gap-4 flex-none">
+        <div class="relative flex-1">
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-scan-barcode"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 7v10"/><path d="M12 7v10"/><path d="M17 7v10"/></svg>
+          </div>
+          <input
+            id="barcode"
+            class="w-full pl-12 pr-4 h-12 rounded-xl border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none shadow-sm text-lg transition-all"
+            placeholder="Scan barcode di sini lalu tekan Enter..."
+            autofocus
+          />
+        </div>
+        <button id="btn-open-manual-item" class="px-6 h-12 bg-slate-700 hover:bg-slate-800 text-white font-medium rounded-xl shadow-sm transition-colors flex items-center gap-2 whitespace-nowrap" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package-plus"><path d="M16 16h6"/><path d="M19 13v6"/><path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14"/><path d="m7.5 4.27 9 5.15"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" x2="12" y1="22" y2="12"/></svg>
+          Manual Item (Ctrl+M)
+        </button>
+      </div>
+
+      <!-- Table Container -->
+      <div class="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+        <div class="overflow-auto flex-1 custom-scrollbar">
+          <table class="w-full text-left border-collapse">
+            <thead class="bg-slate-50 sticky top-0 z-10 shadow-sm">
+              <tr>
+                <th class="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200">Barang</th>
+                <th class="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200 text-center w-32">Qty</th>
+                <th class="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200 text-right w-40">Harga</th>
+                <th class="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200 text-right w-48">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody id="cart-body" class="divide-y divide-slate-100">
+              <!-- Cart items will be rendered here via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="h-auto md:h-24 bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:px-8 flex flex-col md:flex-row items-center justify-between gap-4 flex-none">
+        <div class="w-full md:w-auto text-center md:text-left">
+          <div class="text-sm text-slate-500 font-medium mb-1">TOTAL BELANJA</div>
+          <div id="total-big-input" class="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">Rp 0</div>
+        </div>
+        
+        <div class="flex w-full md:w-auto gap-3">
+          <button id="btn-cancel-input" class="flex-1 md:flex-none px-6 h-12 rounded-xl border border-red-200 text-red-600 bg-red-50 hover:bg-red-100 hover:border-red-300 font-bold transition-all" type="button">
+            Batalkan
+          </button>
+          <button id="btn-process-input" class="flex-1 md:flex-none px-8 h-12 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 font-bold shadow-lg shadow-emerald-100 hover:shadow-emerald-200 transition-all flex items-center justify-center gap-2 group" type="button">
+            Proses Pembayaran
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right group-hover:translate-x-1 transition-transform"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Session 2: Payment -->
+  <div id="session-payment" class="session-card" data-session="PAYMENT">
+    <div class="flex-1 overflow-hidden p-4 md:p-6 flex flex-col md:flex-row gap-6">
+      
+      <!-- Left: Receipt Preview -->
+      <section class="w-full md:w-80 lg:w-96 flex-none flex flex-col gap-2">
+        <h3 class="text-sm font-semibold text-slate-500 uppercase tracking-wider ml-1">Preview Struk</h3>
+        <div class="bg-white border border-slate-200 shadow-sm rounded-xl p-4 overflow-y-auto flex-1 custom-scrollbar">
+          <div id="receipt-preview-container" class="receipt-preview-container text-sm font-mono leading-tight">
+            <!-- Receipt content rendered here -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: Payment Controls -->
+      <section class="flex-1 flex flex-col gap-4">
+        <!-- Big Total Card -->
+        <div class="bg-slate-800 text-white p-6 rounded-2xl shadow-lg flex-none">
+          <div class="text-slate-400 text-sm font-medium mb-1">TOTAL YANG HARUS DIBAYAR</div>
+          <div id="total-big-payment" class="text-4xl md:text-5xl font-bold tracking-tight">Rp 0</div>
+        </div>
+
+        <!-- Input Payment -->
+        <div class="flex-none">
+          <label for="paid" class="block text-sm font-semibold text-slate-600 mb-2">Masukkan Nominal Pembayaran</label>
+          <div class="relative">
+             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 font-bold text-lg">Rp</div>
+             <input
+              id="paid"
+              type="number"
+              min="0"
+              step="1000"
+              class="w-full pl-12 pr-4 h-16 rounded-xl border-2 border-slate-300 focus:border-emerald-500 focus:ring-0 text-right text-3xl font-bold text-slate-800 placeholder-slate-300 outline-none transition-colors"
+              placeholder="0"
+            />
+          </div>
+        </div>
+
+        <!-- Shortcuts -->
+        <div class="flex-1 flex flex-col gap-4 min-h-0">
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-3" id="nominal-shortcuts">
+            <button type="button" class="h-14 bg-white border border-slate-200 rounded-xl font-semibold text-slate-700 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700 shadow-sm transition-all" data-amount="1000">Rp 1.000</button>
+            <button type="button" class="h-14 bg-white border border-slate-200 rounded-xl font-semibold text-slate-700 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700 shadow-sm transition-all" data-amount="5000">Rp 5.000</button>
+            <button type="button" class="h-14 bg-white border border-slate-200 rounded-xl font-semibold text-slate-700 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700 shadow-sm transition-all" data-amount="10000">Rp 10.000</button>
+            <button type="button" class="h-14 bg-white border border-slate-200 rounded-xl font-semibold text-slate-700 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700 shadow-sm transition-all" data-amount="20000">Rp 20.000</button>
+            <button type="button" class="h-14 bg-white border border-slate-200 rounded-xl font-semibold text-slate-700 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700 shadow-sm transition-all" data-amount="50000">Rp 50.000</button>
+            <button type="button" class="h-14 bg-white border border-slate-200 rounded-xl font-semibold text-slate-700 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700 shadow-sm transition-all" data-amount="100000">Rp 100.000</button>
+          </div>
+          
+          <div class="grid grid-cols-3 gap-3 flex-none">
+             <button id="smart-exact" type="button" class="h-12 bg-amber-100 text-amber-800 border border-amber-200 rounded-xl font-bold hover:bg-amber-200 transition-colors">Pas</button>
+             <button id="smart-round-near" type="button" class="h-12 bg-amber-100 text-amber-800 border border-amber-200 rounded-xl font-bold hover:bg-amber-200 transition-colors"></button>
+             <button id="smart-round-high" type="button" class="h-12 bg-amber-100 text-amber-800 border border-amber-200 rounded-xl font-bold hover:bg-amber-200 transition-colors"></button>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-4 pt-4 border-t border-slate-200 flex-none bg-slate-50 -mx-4 -mb-4 px-6 py-4 md:bg-transparent md:border-none md:p-0 md:m-0">
+          <button id="btn-cancel-payment" class="flex-1 h-14 rounded-xl border border-red-200 text-red-600 bg-red-50 hover:bg-red-100 font-bold transition-all text-lg" type="button">
+            Kembali
+          </button>
+          <button id="btn-pay" class="flex-[2] h-14 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 font-bold shadow-lg shadow-emerald-100 text-lg transition-all flex items-center justify-center gap-2" type="button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-banknote"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
+            Bayar & Cetak
+          </button>
+        </div>
+
+      </section>
+    </div>
+  </div>
+
+  <!-- Cancel Confirmation Modal -->
+  <div id="cancel-confirm-modal" class="modal" aria-hidden="true">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-96 transform scale-100 transition-all">
+      <div class="text-center mb-6">
+         <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-alert-triangle"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+         </div>
+         <h3 class="text-xl font-bold text-slate-800">Batalkan Transaksi?</h3>
+         <p class="text-slate-500 mt-2">Seluruh item di keranjang akan dihapus. Tindakan ini tidak bisa dibatalkan.</p>
+      </div>
+      <div class="flex gap-3">
+        <button id="cancel-confirm-no" type="button" class="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors">Tidak</button>
+        <button id="cancel-confirm-yes" type="button" class="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 shadow-lg shadow-red-200 transition-colors">Ya, Batalkan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change Modal -->
+  <div id="change-modal" class="modal" aria-hidden="true">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md text-center transform scale-100 transition-all">
+      <div class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-600">
+         <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check"><path d="M20 6 9 17l-5-5"/></svg>
+      </div>
+      <h3 class="text-2xl font-bold text-slate-800 mb-1">Pembayaran Berhasil!</h3>
+      <p class="text-slate-500 mb-6">Transaksi berhasil disimpan.</p>
+      
+      <div class="bg-slate-50 rounded-xl p-4 mb-8">
+        <p class="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-1">Kembalian Anda</p>
+        <div id="change-amount" class="text-4xl font-extrabold text-emerald-600 tracking-tight">Rp 0</div>
+      </div>
+      
+      <button id="close-change-modal" type="button" class="w-full py-4 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all text-lg">
+        Tutup Jendela (Esc)
+      </button>
+    </div>
+  </div>
+
+  <!-- Manual Item Modal -->
+  <div id="manual-item-modal" class="modal" aria-hidden="true">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <h3 class="text-lg font-bold text-slate-800">Tambah Produk Manual</h3>
+        <p class="text-sm text-slate-500">Cari produk non-barcode atau jasa</p>
+      </div>
+
+      <!-- Modal Content -->
+      <div class="flex-1 overflow-auto p-6 flex flex-col gap-6">
+         <!-- Search -->
+         <div>
+            <label for="nonbc-search" class="block text-sm font-semibold text-slate-700 mb-2">Cari Nama Produk</label>
+            <input id="nonbc-search" type="text" placeholder="Ketik nama produk..." autocomplete="off" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all" />
+         </div>
+
+         <!-- List -->
+         <div class="flex-1 min-h-[200px] border border-slate-200 rounded-xl overflow-hidden bg-slate-50 flex flex-col">
+            <div id="nonbc-product-list" class="flex-1 overflow-y-auto p-2 grid grid-cols-1 md:grid-cols-2 gap-2 content-start">
+               <!-- Product Items injected via JS -->
+            </div>
+         </div>
+         
+         <!-- Details & Qty -->
+         <div class="flex flex-col md:flex-row gap-6">
+            <div class="flex-1">
+               <label for="manual-item-qty" class="block text-sm font-semibold text-slate-700 mb-2">Jumlah / Qty</label>
+               <input id="manual-item-qty" type="number" min="0.001" step="0.001" placeholder="0" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none text-lg font-bold transition-all" />
+            </div>
+            
+            <div id="nonbc-summary" class="flex-1 bg-emerald-50 border border-emerald-100 rounded-xl p-4" style="display:none">
+               <div class="space-y-1 text-sm">
+                  <div class="flex justify-between"><span class="text-slate-500">Produk:</span> <span id="nonbc-product-name" class="font-bold text-slate-800 text-right"></span></div>
+                  <div class="flex justify-between"><span class="text-slate-500">Harga:</span> <span id="nonbc-product-price" class="font-medium text-slate-700 text-right"></span></div>
+                  <div class="flex justify-between"><span class="text-slate-500">Satuan:</span> <span id="nonbc-product-unit" class="font-medium text-slate-700 text-right"></span></div>
+                  <div class="border-t border-emerald-200 my-2 pt-2 flex justify-between items-center">
+                     <span class="font-bold text-emerald-800">Subtotal:</span>
+                     <strong id="nonbc-subtotal" class="text-lg font-extrabold text-emerald-700"></strong>
+                  </div>
+               </div>
+            </div>
+         </div>
+         
+         <div id="manual-item-error" class="hidden text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-100 font-medium text-center" role="status" aria-live="polite"></div>
+      </div>
+
+      <!-- Modal Actions -->
+      <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex justify-end gap-3">
+        <button id="manual-item-cancel" type="button" class="px-6 py-3 bg-white text-slate-700 font-bold border border-slate-300 rounded-xl hover:bg-slate-100 transition-colors">Batal</button>
+        <button id="manual-item-submit" type="button" class="px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all">Tambahkan</button>
+      </div>
+    </div>
+  </div>
+</div>

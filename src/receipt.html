@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Receipt</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 5px;
+        background: #ffffff;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="receipt-root"></div>
+
+    <script src="./js/receiptRenderer.js"></script>
+    <script>
+      const receiptRoot = document.getElementById("receipt-root");
+
+      window.api.onLoadTransaction(async (transactionId) => {
+        const data = await window.api.getTransactionDetail(transactionId);
+        const { transaction, items } = data;
+
+        window.renderReceipt(receiptRoot, {
+          transactionNumber: transaction.transaction_number,
+          transactionDate: transaction.created_at,
+          items: items.map((item) => ({
+            name: item.name,
+            quantity: item.quantity,
+            selling_price: item.selling_price,
+            subtotal: item.subtotal,
+          })),
+          totalAmount: transaction.total_amount,
+          paymentAmount: transaction.payment_amount,
+          changeAmount: transaction.change_amount,
+        });
+
+        // Beri waktu DOM render selesai, lalu signal ke main process
+        setTimeout(() => {
+          window.api.receiptReady();
+        }, 300);
+      });
+    </script>
+  </body>
+</html>

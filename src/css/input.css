@@ -1,0 +1,51 @@
+@import "tailwindcss";
+@source "../**/*.html";
+@source "../**/*.js";
+
+@layer utilities {
+  .session-card {
+    @apply hidden;
+  }
+  .session-card.active {
+    @apply flex flex-col h-full;
+  }
+
+  .kasir-warning, .products-message {
+    @apply fixed top-5 right-5 z-50 px-6 py-4 bg-white border border-slate-200 text-slate-700 rounded-xl shadow-lg transform transition-all duration-300 translate-y-[-150%] opacity-0 font-bold flex items-center gap-3;
+  }
+  .kasir-warning.active, .products-message.active {
+    @apply translate-y-0 opacity-100;
+  }
+  .products-message.success {
+    @apply border-emerald-200 bg-emerald-50 text-emerald-700;
+  }
+  .products-message.error {
+    @apply border-red-200 bg-red-50 text-red-700;
+  }
+
+  .modal {
+    @apply fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 opacity-0 pointer-events-none transition-all duration-200 backdrop-blur-sm;
+  }
+  .modal.active {
+    @apply opacity-100 pointer-events-auto;
+  }
+
+  .nonbc-product-item.selected {
+    @apply border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500 ring-offset-1;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-slate-200 rounded-full hover:bg-slate-300;
+  }
+}
+
+/* Legacy CSS */
+@import "./global.css";
+@import "./date-picker.css";
