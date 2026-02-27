@@ -982,10 +982,118 @@
       { signal },
     );
 
+    // ======= IMPORT STOK MODAL =======
+    const stockImportModal = document.getElementById("stock-import-modal");
+    const btnOpenStockImport = document.getElementById("btn-open-stock-import");
+    const btnCloseStockImport = document.getElementById("close-stock-import-modal");
+    const btnDownloadStockTemplate = document.getElementById("btn-download-stock-template");
+    const btnImportStockExcel = document.getElementById("btn-import-stock-excel");
+
+    function openStockImportModal() {
+      if (stockImportModal) stockImportModal.classList.add("active");
+    }
+
+    function closeStockImportModal() {
+      if (stockImportModal) stockImportModal.classList.remove("active");
+    }
+
+    if (btnOpenStockImport) {
+      btnOpenStockImport.addEventListener("click", () => openStockImportModal(), { signal });
+    }
+
+    if (btnCloseStockImport) {
+      btnCloseStockImport.addEventListener("click", () => closeStockImportModal(), { signal });
+    }
+
+    if (stockImportModal) {
+      stockImportModal.addEventListener(
+        "click",
+        (event) => {
+          if (event.target === stockImportModal) closeStockImportModal();
+        },
+        { signal },
+      );
+    }
+
+    if (btnDownloadStockTemplate) {
+      btnDownloadStockTemplate.addEventListener(
+        "click",
+        async () => {
+          btnDownloadStockTemplate.disabled = true;
+          try {
+            const result = await window.api.downloadStockTemplate();
+            if (signal.aborted) return;
+
+            if (result && result.success) {
+              showMessage("success", result.message);
+            } else if (result) {
+              showMessage("error", result.message || "Gagal menyimpan template.");
+            }
+          } catch (error) {
+            if (!signal.aborted) {
+              showMessage("error", error.message, true);
+            }
+          } finally {
+            if (!signal.aborted) btnDownloadStockTemplate.disabled = false;
+          }
+        },
+        { signal },
+      );
+    }
+
+    if (btnImportStockExcel) {
+      btnImportStockExcel.addEventListener(
+        "click",
+        async () => {
+          setBusy(true);
+          try {
+            const result = await window.api.importStock();
+            if (signal.aborted) return;
+
+            if (result && result.success) {
+              closeStockImportModal();
+              showMessage("success", result.message);
+
+              if (result.errors && result.errors.length > 0) {
+                console.warn("[Import Stok] Peringatan:", result.errors);
+                setTimeout(() => {
+                  if (!signal.aborted) {
+                    showMessage(
+                      "error",
+                      `${result.errors.length} baris bermasalah. Cek console untuk detail.`,
+                      true,
+                    );
+                  }
+                }, 3000);
+              }
+
+              await loadProducts();
+            } else if (result) {
+              showMessage("error", result.message || "Import dibatalkan.");
+            }
+          } catch (error) {
+            if (!signal.aborted) {
+              showMessage("error", error.message, true);
+            }
+          } finally {
+            if (!signal.aborted) setBusy(false);
+          }
+        },
+        { signal },
+      );
+    }
+
     document.addEventListener(
       "keydown",
       (event) => {
-        if (event.key === "Escape" && state.sidebarMode) {
+        if (event.key !== "Escape") return;
+
+        if (stockImportModal && stockImportModal.classList.contains("active")) {
+          closeStockImportModal();
+          return;
+        }
+
+        if (state.sidebarMode) {
           closeSidebar();
         }
       },
@@ -1001,6 +1109,7 @@
     return () => {
       eventController.abort();
       closeSidebar();
+      closeStockImportModal();
 
       if (state.feedbackTimerId) {
         clearTimeout(state.feedbackTimerId);

@@ -10,6 +10,11 @@
         <p class="text-sm font-medium text-slate-500 mt-0.5">Kelola stok masuk dan keluar berbasis batch FIFO.</p>
       </div>
     </div>
+
+    <button id="btn-open-stock-import" class="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ring-offset-2 whitespace-nowrap">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      <span>Import Stok</span>
+    </button>
   </div>
 
   <div id="stock-message" role="status" aria-live="polite" class="hidden"></div>
@@ -75,6 +80,41 @@
       <!-- MODAL CONTENT (Dikontrol via JS) -->
       <div id="stock-modal-content" class="p-6 overflow-y-auto custom-scrollbar flex flex-col gap-6 relative">
         <!-- Diisi konten forms/tables via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL IMPORT STOK -->
+  <div id="stock-import-modal" class="modal">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 overflow-hidden transform scale-95 transition-transform duration-200 border border-slate-200 modal-content-custom">
+      <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+        <h3 class="font-bold text-lg text-slate-800 tracking-tight">Import Stok</h3>
+      </div>
+
+      <div class="p-6 flex flex-col gap-4">
+        <p class="text-sm text-slate-500 leading-relaxed">Unduh template yang sudah berisi daftar barang, isi jumlah stok dan harga modal, lalu upload.</p>
+
+        <button id="btn-download-stock-template" class="w-full flex items-center justify-center gap-3 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ring-offset-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Unduh Template Stok
+        </button>
+
+        <div class="relative flex items-center gap-3">
+          <div class="flex-1 h-px bg-slate-200"></div>
+          <span class="text-xs font-bold text-slate-400 uppercase">lalu</span>
+          <div class="flex-1 h-px bg-slate-200"></div>
+        </div>
+
+        <button id="btn-import-stock-excel" class="w-full flex items-center justify-center gap-3 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 ring-offset-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Upload File Import Stok
+        </button>
+      </div>
+
+      <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end">
+        <button id="close-stock-import-modal" class="px-5 py-2.5 bg-white border border-slate-300 text-slate-700 text-sm font-bold rounded-xl hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-200">
+          Tutup
+        </button>
       </div>
     </div>
   </div>

@@ -53,4 +53,20 @@ try {
   console.error("Migration batch_id nullable failed:", migrationErr.message);
 }
 
+// Migration: add no_sku column to products for SKU number
+try {
+  db.prepare("ALTER TABLE products ADD COLUMN no_sku TEXT UNIQUE").run();
+  console.log("Migration: no_sku column added to products");
+} catch (_err) {
+  // Column already exists — ignore
+}
+
+// Migration: add min_stock column to products
+try {
+  db.prepare("ALTER TABLE products ADD COLUMN min_stock INTEGER DEFAULT 5").run();
+  console.log("Migration: min_stock column added to products");
+} catch (_err) {
+  // Column already exists — ignore
+}
+
 module.exports = db;

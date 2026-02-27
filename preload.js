@@ -47,8 +47,14 @@ contextBridge.exposeInMainWorld("api", {
     ipcRenderer.invoke("products:update", { id, data }),
   toggleProductActive: (id) => ipcRenderer.invoke("products:toggle-active", id),
 
+  downloadImportTemplate: () => ipcRenderer.invoke("products:download-template"),
+  importProducts: () => ipcRenderer.invoke("products:import-excel"),
+
   // Stock
   getAllStock: () => ipcRenderer.invoke("stock:get-all"),
+
+  downloadStockTemplate: () => ipcRenderer.invoke("stock:download-template"),
+  importStock: () => ipcRenderer.invoke("stock:import-excel"),
 
   getStock: (productId) => ipcRenderer.invoke("stock:get", productId),
 

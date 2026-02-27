@@ -1,5 +1,9 @@
 (() => {
   const STYLE_ID = "receipt-renderer-style";
+  const LINE_WIDTH = 42;
+  const DASH = "-";
+
+  // ──── Utility ────
 
   function toNumber(value) {
     const parsed = Number(value);
@@ -10,26 +14,27 @@
     return `Rp ${toNumber(value).toLocaleString("id-ID")}`;
   }
 
-  function formatAmountCompact(value) {
+  function formatAmount(value) {
     return toNumber(value).toLocaleString("id-ID");
   }
 
-  function formatDateTime(value) {
+  function formatDateIndomaret(value) {
+    let d;
     if (!value) {
-      return new Date().toLocaleString("id-ID");
+      d = new Date();
+    } else if (value instanceof Date) {
+      d = value;
+    } else {
+      const normalized = String(value).replace(" ", "T");
+      d = new Date(normalized);
+      if (Number.isNaN(d.getTime())) return String(value);
     }
-
-    if (value instanceof Date) {
-      return value.toLocaleString("id-ID");
-    }
-
-    const normalized = String(value).replace(" ", "T");
-    const parsed = new Date(normalized);
-    if (Number.isNaN(parsed.getTime())) {
-      return String(value);
-    }
-
-    return parsed.toLocaleString("id-ID");
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yy = String(d.getFullYear()).slice(-2);
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mi = String(d.getMinutes()).padStart(2, "0");
+    return `${dd}.${mm}.${yy}-${hh}:${mi}`;
   }
 
   function normalizeItem(item) {
@@ -41,20 +46,13 @@
       item?.selling_price ?? item?.sellingPrice ?? item?.price ?? 0,
     );
     const subtotal = toNumber(item?.subtotal ?? quantity * sellingPrice);
-
-    return {
-      name: String(item?.name ?? "-"),
-      quantity,
-      sellingPrice,
-      subtotal,
-    };
+    return { name: String(item?.name ?? "-"), quantity, sellingPrice, subtotal };
   }
 
   function normalizeReceiptData(transactionData = {}) {
     const items = Array.isArray(transactionData.items)
       ? transactionData.items.map(normalizeItem)
       : [];
-
     return {
       storeName: String(transactionData.storeName ?? "TOKO SANJAYA BAROKAH"),
       storeTagline: String(
@@ -64,7 +62,7 @@
         transactionData.storeAddress ?? "Sanan, Balesono - Tulungagung",
       ),
       transactionNumber: String(transactionData.transactionNumber ?? "-"),
-      transactionDate: formatDateTime(transactionData.transactionDate),
+      transactionDate: formatDateIndomaret(transactionData.transactionDate),
       items,
       totalAmount: toNumber(transactionData.totalAmount),
       paymentAmount: toNumber(transactionData.paymentAmount),
@@ -77,160 +75,155 @@
     };
   }
 
-  function renderReceiptItems(containerElement, items) {
-    containerElement.innerHTML = "";
+  // ──── Text layout helpers ────
 
-    if (!items.length) {
-      const emptyEl = containerElement.ownerDocument.createElement("div");
-      emptyEl.className = "receipt-item-empty";
-      emptyEl.textContent = "(Belum ada item)";
-      containerElement.appendChild(emptyEl);
-      return;
-    }
-
-    items.forEach((item) => {
-      const itemEl = containerElement.ownerDocument.createElement("div");
-      itemEl.className = "receipt-item";
-
-      const nameEl = containerElement.ownerDocument.createElement("div");
-      nameEl.className = "receipt-item-name";
-      nameEl.textContent = item.name;
-
-      const metaEl = containerElement.ownerDocument.createElement("div");
-      metaEl.className = "receipt-item-meta";
-
-      const leftEl = containerElement.ownerDocument.createElement("span");
-      leftEl.className = "receipt-item-left";
-      leftEl.textContent = `${item.quantity} x ${formatAmountCompact(item.sellingPrice)}`;
-
-      const rightEl = containerElement.ownerDocument.createElement("span");
-      rightEl.className = "receipt-item-right";
-      rightEl.textContent = formatAmountCompact(item.subtotal);
-
-      metaEl.append(leftEl, rightEl);
-      itemEl.append(nameEl, metaEl);
-      containerElement.appendChild(itemEl);
-    });
+  function center(text, w = LINE_WIDTH) {
+    if (text.length >= w) return text.substring(0, w);
+    const pad = Math.floor((w - text.length) / 2);
+    return " ".repeat(pad) + text;
   }
 
-  function ensureReceiptStyle(doc) {
-    if (!doc || !doc.head || doc.getElementById(STYLE_ID)) {
-      return;
+  function dashes(w = LINE_WIDTH) {
+    return DASH.repeat(w);
+  }
+
+  function shortDashes(w = LINE_WIDTH) {
+    const len = Math.floor(w * 0.55);
+    return " ".repeat(w - len) + DASH.repeat(len);
+  }
+
+  // "           LABEL :    AMOUNT" — right-aligned summary row
+  function summaryRow(label, amount, w = LINE_WIDTH) {
+    const amtStr = formatAmount(amount);
+    const right = `${label} :${amtStr.padStart(10)}`;
+    return right.padStart(w);
+  }
+
+  // 1-line item: NAME(21) QTY(4) PRICE(7) SUBTOTAL(10) = 42
+  function itemLine(item, w = LINE_WIDTH) {
+    const qtyStr = String(item.quantity).padStart(4);
+    const priceStr = String(item.sellingPrice).padStart(7);
+    const subStr = formatAmount(item.subtotal).padStart(10);
+    const rightPart = qtyStr + priceStr + subStr;
+    const nameW = w - rightPart.length;
+    const name = item.name.toUpperCase();
+    const display =
+      name.length > nameW ? name.substring(0, nameW) : name.padEnd(nameW);
+    return display + rightPart;
+  }
+
+  // Word-wrap long text into multiple lines
+  function wordWrap(text, maxW) {
+    const words = text.split(/\s+/);
+    const lines = [];
+    let cur = "";
+    for (const word of words) {
+      if (!cur) {
+        cur = word;
+      } else if (cur.length + 1 + word.length <= maxW) {
+        cur += " " + word;
+      } else {
+        lines.push(cur);
+        cur = word;
+      }
+    }
+    if (cur) lines.push(cur);
+    return lines;
+  }
+
+  // ──── Build receipt text ────
+
+  function buildReceiptText(data) {
+    const L = [];
+
+    // ── Header ──
+    L.push(dashes());
+    L.push(center(data.storeName.toUpperCase()));
+    L.push(center(data.storeTagline.toUpperCase()));
+    L.push(center(data.storeAddress.toUpperCase()));
+
+    // ── Transaction info ──
+    L.push(dashes());
+    const txLine = `${data.transactionDate}/${data.transactionNumber}`;
+    L.push(center(txLine.toUpperCase()));
+    L.push(dashes());
+
+    // ── Items ──
+    if (!data.items.length) {
+      L.push(center("(BELUM ADA ITEM)"));
+    } else {
+      data.items.forEach((item) => L.push(itemLine(item)));
     }
 
-    const styleEl = doc.createElement("style");
-    styleEl.id = STYLE_ID;
-    styleEl.textContent = `
+    // ── Summary ──
+    L.push(shortDashes());
+    L.push(summaryRow("HARGA JUAL", data.totalAmount));
+    L.push(shortDashes());
+    L.push(summaryRow("TOTAL", data.totalAmount));
+    L.push(summaryRow("TUNAI", data.paymentAmount));
+    L.push(summaryRow("KEMBALI", data.changeAmount));
+
+    // ── Footer ──
+    L.push(dashes());
+    L.push(center(data.footerLine1.toUpperCase()));
+    const f2 = data.footerLine2.toUpperCase();
+    wordWrap(f2, LINE_WIDTH).forEach((line) => L.push(center(line)));
+
+    return L.join("\n");
+  }
+
+  // ──── CSS ────
+
+  function ensureReceiptStyle(doc) {
+    if (!doc || !doc.head || doc.getElementById(STYLE_ID)) return;
+
+    const s = doc.createElement("style");
+    s.id = STYLE_ID;
+    s.textContent = `
       .receipt-render {
-        width: var(--receipt-width, 200px);
+        width: var(--receipt-width, auto);
         max-width: 100%;
         margin: 0 auto;
         padding: 5px;
-        background: #ffffff;
-        color: #000000;
+        background: #fff;
+        color: #000;
+      }
+
+      .receipt-render pre {
         font-family: "Courier New", Consolas, monospace;
         font-size: 11px;
-        line-height: 1.35;
-      }
-
-      .receipt-render .receipt-center {
-        text-align: center;
-      }
-
-      .receipt-render .receipt-bold {
-        font-weight: 700;
-      }
-
-      .receipt-render .receipt-small {
-        font-size: 10px;
-      }
-
-      .receipt-render .receipt-divider {
-        border-top: 1px dashed #000000;
-        margin: 5px 0;
-      }
-
-      .receipt-render .receipt-items {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-      }
-
-      .receipt-render .receipt-item {
-        border-bottom: 1px dashed #000000;
-        padding-bottom: 6px;
-      }
-
-      .receipt-render .receipt-item:last-child {
-        border-bottom: none;
-        padding-bottom: 0;
-      }
-
-      .receipt-render .receipt-item-name {
+        line-height: 1.15;
         margin: 0;
-        overflow-wrap: anywhere;
-      }
-
-      .receipt-render .receipt-item-meta {
-        margin-top: 2px;
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-        gap: 8px;
-      }
-
-      .receipt-render .receipt-item-left {
-        min-width: 0;
-        white-space: nowrap;
+        padding: 0;
+        white-space: pre;
         overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .receipt-render .receipt-item-right {
-        white-space: nowrap;
-        text-align: right;
-      }
-
-      .receipt-render .receipt-item-empty {
-        color: #333333;
-      }
-
-      .receipt-render .receipt-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-        gap: 8px;
-      }
-
-      .receipt-render .receipt-row .receipt-right {
-        text-align: right;
+        letter-spacing: 0;
       }
 
       @media print {
         body {
           margin: 0;
           padding: 0;
-          background: #ffffff;
+          background: #fff;
         }
 
         .receipt-render {
-          width: 100% !important;
-          max-width: 219px;
+          width: auto !important;
           margin: 0;
           padding: 2mm;
-          font-size: 12px;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
         }
 
-        .receipt-render .receipt-divider {
-          border-top-color: #000000;
+        .receipt-render pre {
+          font-size: 12px;
         }
       }
     `;
-
-    doc.head.appendChild(styleEl);
+    doc.head.appendChild(s);
   }
+
+  // ──── Render ────
 
   function renderReceipt(containerElement, transactionData = {}) {
     if (!containerElement || !(containerElement instanceof Element)) {
@@ -241,65 +234,19 @@
     ensureReceiptStyle(doc);
 
     const data = normalizeReceiptData(transactionData);
+    const text = buildReceiptText(data);
 
-    containerElement.innerHTML = `
-      <div class="receipt-render">
-        <div class="receipt-center receipt-bold" data-receipt-store-name></div>
-        <div class="receipt-center receipt-small" data-receipt-store-tagline></div>
-        <div class="receipt-center receipt-small" data-receipt-store-address></div>
+    // Build DOM safely (textContent auto-escapes)
+    const wrapper = doc.createElement("div");
+    wrapper.className = "receipt-render";
+    const pre = doc.createElement("pre");
+    pre.textContent = text;
+    wrapper.appendChild(pre);
 
-        <div class="receipt-divider"></div>
-
-        <div>No: <span data-receipt-number></span></div>
-        <div>Tanggal: <span data-receipt-date></span></div>
-
-        <div class="receipt-divider"></div>
-
-        <div class="receipt-items" data-receipt-items></div>
-
-        <div class="receipt-divider"></div>
-
-        <div class="receipt-row">
-          <span>Total</span>
-          <span class="receipt-right" data-receipt-total></span>
-        </div>
-        <div class="receipt-row">
-          <span>Bayar</span>
-          <span class="receipt-right" data-receipt-payment></span>
-        </div>
-        <div class="receipt-row">
-          <span>Kembali</span>
-          <span class="receipt-right" data-receipt-change></span>
-        </div>
-
-        <div class="receipt-divider"></div>
-
-        <div class="receipt-center" data-receipt-footer-line-1></div>
-        <div class="receipt-center receipt-small" data-receipt-footer-line-2></div>
-      </div>
-    `;
-
-    const root = containerElement.querySelector(".receipt-render");
-    root.querySelector("[data-receipt-store-name]").textContent = data.storeName;
-    root.querySelector("[data-receipt-store-tagline]").textContent = data.storeTagline;
-    root.querySelector("[data-receipt-store-address]").textContent = data.storeAddress;
-    root.querySelector("[data-receipt-number]").textContent = data.transactionNumber;
-    root.querySelector("[data-receipt-date]").textContent = data.transactionDate;
-    renderReceiptItems(root.querySelector("[data-receipt-items]"), data.items);
-    root.querySelector("[data-receipt-total]").textContent = formatRupiah(data.totalAmount);
-    root.querySelector("[data-receipt-payment]").textContent = formatRupiah(
-      data.paymentAmount,
-    );
-    root.querySelector("[data-receipt-change]").textContent = formatRupiah(
-      data.changeAmount,
-    );
-    root.querySelector("[data-receipt-footer-line-1]").textContent = data.footerLine1;
-    root.querySelector("[data-receipt-footer-line-2]").textContent = data.footerLine2;
+    containerElement.innerHTML = "";
+    containerElement.appendChild(wrapper);
   }
 
   window.renderReceipt = renderReceipt;
-  window.receiptRenderer = {
-    renderReceipt,
-    formatRupiah,
-  };
+  window.receiptRenderer = { renderReceipt, formatRupiah };
 })();

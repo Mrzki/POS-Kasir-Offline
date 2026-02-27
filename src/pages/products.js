@@ -16,6 +16,7 @@
     const categorySelect = document.getElementById("product-category");
     const priceInput = document.getElementById("product-price");
     const unitSelect = document.getElementById("product-unit");
+    const minStockInput = document.getElementById("product-min-stock");
     const weighedCheckbox = document.getElementById("product-weighed");
 
     const saveBtn = document.getElementById("save-product");
@@ -37,6 +38,7 @@
       !categorySelect ||
       !priceInput ||
       !unitSelect ||
+      !minStockInput ||
       !weighedCheckbox ||
       !saveBtn ||
       !cancelBtn
@@ -121,7 +123,7 @@
       body.innerHTML = "";
 
       if (!products.length) {
-        body.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-slate-400 italic">Tidak ada data barang.</td></tr>`;
+        body.innerHTML = `<tr><td colspan="8" class="px-6 py-8 text-center text-slate-400 italic">Tidak ada data barang.</td></tr>`;
         return;
       }
 
@@ -137,6 +139,7 @@
         const toggleClass = product.is_active ? "text-red-500 hover:text-red-700 hover:bg-red-50" : "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50";
 
         tr.innerHTML = `
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-mono">${escapeHtml(product.no_sku || "-")}</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-800">${escapeHtml(product.name)}</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-mono">${escapeHtml(product.barcode || "-")}</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600"><span class="px-2 py-1 bg-slate-100 rounded-md text-xs font-semibold">${escapeHtml(product.category_name || "-")}</span></td>
@@ -168,6 +171,7 @@
       categorySelect.value = "";
       priceInput.value = "";
       unitSelect.value = "pcs";
+      minStockInput.value = "";
       weighedCheckbox.checked = false;
     }
 
@@ -184,6 +188,7 @@
         categorySelect.value = product.category_id || "";
         priceInput.value = product.selling_price || "";
         unitSelect.value = product.unit || "pcs";
+        minStockInput.value = product.min_stock ?? 5;
         weighedCheckbox.checked = Boolean(product.is_non_barcode);
         return;
       }
@@ -261,6 +266,7 @@
         category_id: categorySelect.value || null,
         selling_price: sellingPrice,
         unit: unitSelect.value,
+        min_stock: minStockInput.value !== "" ? parseInt(minStockInput.value, 10) : 5,
         is_non_barcode: weighedCheckbox.checked,
       };
 
@@ -362,6 +368,106 @@
       { signal },
     );
 
+    const importModal = document.getElementById("import-modal");
+    const btnOpenImport = document.getElementById("btn-open-import");
+    const btnCloseImport = document.getElementById("close-import-modal");
+    const btnDownloadTemplate = document.getElementById("btn-download-template");
+    const btnImportExcel = document.getElementById("btn-import-excel");
+
+    function openImportModal() {
+      if (importModal) importModal.classList.add("active");
+    }
+
+    function closeImportModal() {
+      if (importModal) importModal.classList.remove("active");
+    }
+
+    if (btnOpenImport) {
+      btnOpenImport.addEventListener("click", () => openImportModal(), { signal });
+    }
+
+    if (btnCloseImport) {
+      btnCloseImport.addEventListener("click", () => closeImportModal(), { signal });
+    }
+
+    if (importModal) {
+      importModal.addEventListener(
+        "click",
+        (event) => {
+          if (event.target === importModal) closeImportModal();
+        },
+        { signal },
+      );
+    }
+
+    if (btnDownloadTemplate) {
+      btnDownloadTemplate.addEventListener(
+        "click",
+        async () => {
+          btnDownloadTemplate.disabled = true;
+          try {
+            const result = await window.api.downloadImportTemplate();
+            if (signal.aborted) return;
+
+            if (result && result.success) {
+              showMessage("success", result.message);
+            } else if (result) {
+              showMessage("error", result.message || "Gagal menyimpan template.");
+            }
+          } catch (error) {
+            if (!signal.aborted) {
+              showMessage("error", error.message, true);
+            }
+          } finally {
+            if (!signal.aborted) btnDownloadTemplate.disabled = false;
+          }
+        },
+        { signal },
+      );
+    }
+
+    if (btnImportExcel) {
+      btnImportExcel.addEventListener(
+        "click",
+        async () => {
+          setBusy(true);
+          try {
+            const result = await window.api.importProducts();
+            if (signal.aborted) return;
+
+            if (result && result.success) {
+              closeImportModal();
+              showMessage("success", result.message);
+
+              if (result.errors && result.errors.length > 0) {
+                console.warn("[Import] Peringatan:", result.errors);
+                setTimeout(() => {
+                  if (!signal.aborted) {
+                    showMessage(
+                      "error",
+                      `${result.errors.length} baris bermasalah. Cek console untuk detail.`,
+                      true,
+                    );
+                  }
+                }, 3000);
+              }
+
+              await loadProducts();
+            } else if (result) {
+              showMessage("error", result.message || "Import dibatalkan.");
+            }
+          } catch (error) {
+            if (!signal.aborted) {
+              showMessage("error", error.message, true);
+            }
+          } finally {
+            if (!signal.aborted) setBusy(false);
+          }
+        },
+        { signal },
+      );
+    }
+
     body.addEventListener(
       "click",
       (event) => {
@@ -448,6 +554,11 @@
       (event) => {
         if (event.key !== "Escape") return;
 
+        if (importModal && importModal.classList.contains("active")) {
+          closeImportModal();
+          return;
+        }
+
         if (confirmModal.classList.contains("active")) {
           closeConfirmModal(false);
           return;
@@ -470,6 +581,7 @@
       eventController.abort();
       closeModal();
       closeConfirmModal(false);
+      closeImportModal();
 
       if (state.feedbackTimerId) {
         clearTimeout(state.feedbackTimerId);

@@ -1,9 +1,11 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, dialog } = require("electron");
 const path = require("path");
+const fs = require("fs");
 const transactionService = require("./services/transactionService");
 const productService = require("./services/productService");
 const dashboardService = require("./services/dashboardService");
 const stockService = require("./services/stockService");
+const importService = require("./services/importService");
 
 // INIT DATABASE
 require("./database/db");
@@ -213,6 +215,96 @@ ipcMain.handle("products:update", (event, { id, data }) => {
 
 ipcMain.handle("products:toggle-active", (event, id) => {
   return productService.toggleProductActive(id);
+});
+
+ipcMain.handle("products:download-template", async () => {
+  try {
+    const buffer = await importService.generateTemplate();
+
+    const { filePath, canceled } = await dialog.showSaveDialog({
+      title: "Simpan Template Import Barang",
+      defaultPath: "Template_Import_Barang.xlsx",
+      filters: [{ name: "Excel Files", extensions: ["xlsx"] }],
+    });
+
+    if (canceled || !filePath) return { success: false, message: "Dibatalkan." };
+
+    fs.writeFileSync(filePath, buffer);
+
+    return { success: true, message: "Template berhasil disimpan.", filePath };
+  } catch (err) {
+    console.error("[download-template] Error:", err);
+    return { success: false, message: `Gagal membuat template: ${err.message}` };
+  }
+});
+
+ipcMain.handle("products:import-excel", async () => {
+  try {
+    const { filePaths, canceled } = await dialog.showOpenDialog({
+      title: "Pilih File Excel Import Barang",
+      filters: [{ name: "Excel Files", extensions: ["xlsx", "xls"] }],
+      properties: ["openFile"],
+    });
+
+    if (canceled || filePaths.length === 0)
+      return { success: false, message: "Dibatalkan." };
+
+    const result = await importService.importProducts(filePaths[0]);
+
+    return {
+      success: true,
+      message: `Import selesai: ${result.inserted} barang baru, ${result.updated} barang diupdate.`,
+      ...result,
+    };
+  } catch (err) {
+    console.error("[import-excel] Error:", err);
+    return { success: false, message: `Import gagal: ${err.message}` };
+  }
+});
+
+ipcMain.handle("stock:download-template", async () => {
+  try {
+    const buffer = await importService.generateStockTemplate();
+
+    const { filePath, canceled } = await dialog.showSaveDialog({
+      title: "Simpan Template Import Stok",
+      defaultPath: "Template_Import_Stok.xlsx",
+      filters: [{ name: "Excel Files", extensions: ["xlsx"] }],
+    });
+
+    if (canceled || !filePath) return { success: false, message: "Dibatalkan." };
+
+    fs.writeFileSync(filePath, buffer);
+
+    return { success: true, message: "Template stok berhasil disimpan.", filePath };
+  } catch (err) {
+    console.error("[stock:download-template] Error:", err);
+    return { success: false, message: `Gagal membuat template: ${err.message}` };
+  }
+});
+
+ipcMain.handle("stock:import-excel", async () => {
+  try {
+    const { filePaths, canceled } = await dialog.showOpenDialog({
+      title: "Pilih File Excel Import Stok",
+      filters: [{ name: "Excel Files", extensions: ["xlsx", "xls"] }],
+      properties: ["openFile"],
+    });
+
+    if (canceled || filePaths.length === 0)
+      return { success: false, message: "Dibatalkan." };
+
+    const result = await importService.importStock(filePaths[0]);
+
+    return {
+      success: true,
+      message: `Import selesai: ${result.inserted} batch stok berhasil ditambahkan.`,
+      ...result,
+    };
+  } catch (err) {
+    console.error("[stock:import-excel] Error:", err);
+    return { success: false, message: `Import stok gagal: ${err.message}` };
+  }
 });
 
 // Stoсk IPC

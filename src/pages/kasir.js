@@ -305,7 +305,7 @@
 
       if (!state.cart.length) {
         cartBody.innerHTML = `
-            <td colspan="4" class="px-6 py-12 text-center text-slate-400 italic">
+            <td colspan="5" class="px-6 py-12 text-center text-slate-400 italic">
               <div class="flex flex-col items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shopping-cart"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
                 <p>Keranjang masih kosong.</p>
@@ -332,6 +332,11 @@
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700 text-right">${escapeHtml(formatRupiah(item.price))}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-emerald-600 text-right">${escapeHtml(formatRupiah(item.subtotal))}</td>
+            <td class="px-3 py-4 whitespace-nowrap text-center">
+              <button type="button" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors" data-action="delete" data-index="${index}" title="Hapus item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pointer-events-none"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+              </button>
+            </td>
           `;
           cartBody.appendChild(cartRow);
         });
@@ -769,6 +774,12 @@
             if (!item) return;
 
             await finishQtyEdit("commit");
+
+            if (action === "delete") {
+              state.cart.splice(index, 1);
+              renderCart();
+              return;
+            }
 
             if (item.is_non_barcode) {
               if (action === "plus") {
