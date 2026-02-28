@@ -982,6 +982,34 @@
       { signal },
     );
 
+    // ======= EXPORT STOK =======
+    const btnExportStock = document.getElementById("btn-export-stock");
+    if (btnExportStock) {
+      btnExportStock.addEventListener(
+        "click",
+        async () => {
+          btnExportStock.disabled = true;
+          try {
+            const result = await window.api.exportStock();
+            if (signal.aborted) return;
+
+            if (result && result.success) {
+              showMessage("success", result.message);
+            } else if (result) {
+              showMessage("error", result.message || "Export dibatalkan.");
+            }
+          } catch (error) {
+            if (!signal.aborted) {
+              showMessage("error", error.message, true);
+            }
+          } finally {
+            if (!signal.aborted) btnExportStock.disabled = false;
+          }
+        },
+        { signal },
+      );
+    }
+
     // ======= IMPORT STOK MODAL =======
     const stockImportModal = document.getElementById("stock-import-modal");
     const btnOpenStockImport = document.getElementById("btn-open-stock-import");

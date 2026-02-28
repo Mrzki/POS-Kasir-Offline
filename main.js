@@ -266,6 +266,48 @@ ipcMain.handle("products:import-excel", async () => {
   }
 });
 
+ipcMain.handle("products:export-excel", async () => {
+  try {
+    const buffer = await importService.exportProductsExcel();
+
+    const { filePath, canceled } = await dialog.showSaveDialog({
+      title: "Simpan Data Barang",
+      defaultPath: "Data_Barang.xlsx",
+      filters: [{ name: "Excel Files", extensions: ["xlsx"] }],
+    });
+
+    if (canceled || !filePath) return { success: false, message: "Dibatalkan." };
+
+    fs.writeFileSync(filePath, buffer);
+
+    return { success: true, message: "Data barang berhasil diekspor.", filePath };
+  } catch (err) {
+    console.error("[products:export-excel] Error:", err);
+    return { success: false, message: `Gagal export: ${err.message}` };
+  }
+});
+
+ipcMain.handle("stock:export-excel", async () => {
+  try {
+    const buffer = await importService.exportStockExcel();
+
+    const { filePath, canceled } = await dialog.showSaveDialog({
+      title: "Simpan Data Stok Barang",
+      defaultPath: "Data_Stok_Barang.xlsx",
+      filters: [{ name: "Excel Files", extensions: ["xlsx"] }],
+    });
+
+    if (canceled || !filePath) return { success: false, message: "Dibatalkan." };
+
+    fs.writeFileSync(filePath, buffer);
+
+    return { success: true, message: "Data stok berhasil diekspor.", filePath };
+  } catch (err) {
+    console.error("[stock:export-excel] Error:", err);
+    return { success: false, message: `Gagal export stok: ${err.message}` };
+  }
+});
+
 ipcMain.handle("stock:download-template", async () => {
   try {
     const buffer = await importService.generateStockTemplate();
@@ -373,6 +415,31 @@ ipcMain.handle("open-report", () => {
 
 
 // Sales report IPC
+ipcMain.handle("sales:export-excel", async (event, { rows, startDate, endDate }) => {
+  try {
+    if (!rows || !rows.length) {
+      return { success: false, message: "Tidak ada data untuk diekspor." };
+    }
+
+    const buffer = await importService.exportSalesExcel({ rows, startDate, endDate });
+
+    const { filePath, canceled } = await dialog.showSaveDialog({
+      title: "Simpan Laporan Penjualan",
+      defaultPath: `Laporan_Penjualan_${startDate}_${endDate}.xlsx`,
+      filters: [{ name: "Excel Files", extensions: ["xlsx"] }],
+    });
+
+    if (canceled || !filePath) return { success: false, message: "Dibatalkan." };
+
+    fs.writeFileSync(filePath, buffer);
+
+    return { success: true, message: "Laporan penjualan berhasil disimpan.", filePath };
+  } catch (err) {
+    console.error("[sales:export-excel] Error:", err);
+    return { success: false, message: `Gagal export: ${err.message}` };
+  }
+});
+
 ipcMain.handle("sales:get-summary", (event, range = {}) => {
   const { startDate, endDate } = resolveDateRange(range);
 

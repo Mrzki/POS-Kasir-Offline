@@ -368,6 +368,33 @@
       { signal },
     );
 
+    const btnExportProducts = document.getElementById("btn-export-products");
+    if (btnExportProducts) {
+      btnExportProducts.addEventListener(
+        "click",
+        async () => {
+          btnExportProducts.disabled = true;
+          try {
+            const result = await window.api.exportProducts();
+            if (signal.aborted) return;
+
+            if (result && result.success) {
+              showMessage("success", result.message);
+            } else if (result) {
+              showMessage("error", result.message || "Export dibatalkan.");
+            }
+          } catch (error) {
+            if (!signal.aborted) {
+              showMessage("error", error.message, true);
+            }
+          } finally {
+            if (!signal.aborted) btnExportProducts.disabled = false;
+          }
+        },
+        { signal },
+      );
+    }
+
     const importModal = document.getElementById("import-modal");
     const btnOpenImport = document.getElementById("btn-open-import");
     const btnCloseImport = document.getElementById("close-import-modal");

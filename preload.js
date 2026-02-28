@@ -52,12 +52,14 @@ contextBridge.exposeInMainWorld("api", {
 
   downloadImportTemplate: () => ipcRenderer.invoke("products:download-template"),
   importProducts: () => ipcRenderer.invoke("products:import-excel"),
+  exportProducts: () => ipcRenderer.invoke("products:export-excel"),
 
   // Stock
   getAllStock: () => ipcRenderer.invoke("stock:get-all"),
 
   downloadStockTemplate: () => ipcRenderer.invoke("stock:download-template"),
   importStock: () => ipcRenderer.invoke("stock:import-excel"),
+  exportStock: () => ipcRenderer.invoke("stock:export-excel"),
 
   getStock: (productId) => ipcRenderer.invoke("stock:get", productId),
 
@@ -78,6 +80,8 @@ contextBridge.exposeInMainWorld("api", {
     ipcRenderer.invoke("get-transaction-detail", transactionId),
 
   getSalesSummary: (range) => ipcRenderer.invoke("sales:get-summary", range),
+
+  exportSalesExcel: (data) => ipcRenderer.invoke("sales:export-excel", data),
 
   getSalesProductDetail: (payload) =>
     ipcRenderer.invoke("sales:get-product-detail", payload),

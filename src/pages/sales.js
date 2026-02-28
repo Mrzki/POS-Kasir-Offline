@@ -500,6 +500,45 @@
       { signal },
     );
 
+    const btnExportSales = document.getElementById("btn-export-sales");
+    if (btnExportSales) {
+      btnExportSales.addEventListener(
+        "click",
+        async () => {
+          if (!state.rows.length) {
+            showMessage("error", "Tidak ada data untuk diekspor.", true);
+            return;
+          }
+
+          const startDate = parseDateToISO(dateFromInput.value);
+          const endDate = parseDateToISO(dateToInput.value);
+
+          btnExportSales.disabled = true;
+          try {
+            const result = await window.api.exportSalesExcel({
+              rows: state.rows,
+              startDate,
+              endDate,
+            });
+            if (signal.aborted) return;
+
+            if (result && result.success) {
+              showMessage("success", result.message);
+            } else if (result) {
+              showMessage("error", result.message || "Export dibatalkan.");
+            }
+          } catch (error) {
+            if (!signal.aborted) {
+              showMessage("error", error.message, true);
+            }
+          } finally {
+            if (!signal.aborted) btnExportSales.disabled = false;
+          }
+        },
+        { signal },
+      );
+    }
+
     summaryBody.addEventListener(
       "click",
       (event) => {

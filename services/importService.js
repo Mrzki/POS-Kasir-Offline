@@ -529,10 +529,367 @@ async function importStock(filePath) {
   return { inserted, errors };
 }
 
+/* ===============================
+   EXPORT SALES DATA TO EXCEL
+================================= */
+async function exportSalesExcel({ rows, startDate, endDate }) {
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "POS Kasir";
+  workbook.created = new Date();
+
+  const sheet = workbook.addWorksheet("Laporan Penjualan");
+
+  // Baris 1 — Judul
+  sheet.mergeCells("A1:F1");
+  const titleCell = sheet.getCell("A1");
+  titleCell.value = `Laporan Penjualan Barang — ${startDate} s/d ${endDate}`;
+  titleCell.font = { bold: true, size: 13, color: { argb: "FF1E293B" } };
+  titleCell.alignment = { vertical: "middle" };
+  sheet.getRow(1).height = 32;
+
+  // Baris 2 — Header
+  const headers = [
+    { header: "Barcode / Kode", width: 22 },
+    { header: "Nama Barang", width: 30 },
+    { header: "Kategori", width: 20 },
+    { header: "Total Qty Terjual", width: 18 },
+    { header: "Total Pendapatan", width: 22 },
+    { header: "Total Keuntungan", width: 22 },
+  ];
+
+  const headerRow = sheet.getRow(2);
+  headers.forEach((h, i) => {
+    const col = i + 1;
+    const cell = headerRow.getCell(col);
+    cell.value = h.header;
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF059669" },
+    };
+    cell.alignment = { vertical: "middle", horizontal: "center" };
+    cell.border = {
+      bottom: { style: "thin", color: { argb: "FF047857" } },
+    };
+    sheet.getColumn(col).width = h.width;
+  });
+  headerRow.height = 28;
+
+  // Baris 3+ — Data
+  let totalQty = 0;
+  let totalRevenue = 0;
+  let totalProfit = 0;
+
+  rows.forEach((row, i) => {
+    const dataRow = sheet.getRow(i + 3);
+    dataRow.getCell(1).value = row.product_code || "-";
+    dataRow.getCell(2).value = row.product_name || "-";
+    dataRow.getCell(3).value = row.category_name || "-";
+    dataRow.getCell(4).value = Number(row.total_qty || 0);
+    dataRow.getCell(5).value = Number(row.total_revenue || 0);
+    dataRow.getCell(6).value = Number(row.total_profit || 0);
+
+    totalQty += Number(row.total_qty || 0);
+    totalRevenue += Number(row.total_revenue || 0);
+    totalProfit += Number(row.total_profit || 0);
+  });
+
+  // Baris total
+  const totalRowNum = rows.length + 3;
+  const totalRow = sheet.getRow(totalRowNum);
+  totalRow.getCell(1).value = "";
+  totalRow.getCell(2).value = "";
+  totalRow.getCell(3).value = "TOTAL";
+  totalRow.getCell(4).value = totalQty;
+  totalRow.getCell(5).value = totalRevenue;
+  totalRow.getCell(6).value = totalProfit;
+
+  for (let c = 1; c <= 6; c++) {
+    const cell = totalRow.getCell(c);
+    cell.font = { bold: true, size: 11, color: { argb: "FF1E293B" } };
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFE2E8F0" },
+    };
+    cell.border = {
+      top: { style: "thin", color: { argb: "FF94A3B8" } },
+      bottom: { style: "thin", color: { argb: "FF94A3B8" } },
+    };
+  }
+
+  // Format kolom numerik
+  sheet.getColumn(4).numFmt = "#,##0";
+  sheet.getColumn(5).numFmt = "#,##0";
+  sheet.getColumn(6).numFmt = "#,##0";
+
+  // Auto-filter
+  sheet.autoFilter = {
+    from: { row: 2, column: 1 },
+    to: { row: totalRowNum - 1, column: 6 },
+  };
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  return Buffer.from(buffer);
+}
+
+/* ===============================
+   EXPORT PRODUCTS TO EXCEL
+   (Same format as import template — can be re-imported)
+================================= */
+async function exportProductsExcel() {
+  // Query semua produk dengan kategori
+  const products = db
+    .prepare(
+      `
+      SELECT
+        p.no_sku,
+        p.name,
+        c.name AS category_name,
+        p.selling_price,
+        p.unit,
+        p.barcode,
+        p.min_stock,
+        p.is_non_barcode
+      FROM products p
+      LEFT JOIN categories c ON c.id = p.category_id
+      WHERE p.is_active = 1
+      ORDER BY p.name COLLATE NOCASE ASC
+    `,
+    )
+    .all();
+
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "POS Kasir";
+  workbook.created = new Date();
+
+  const sheet = workbook.addWorksheet("Data Barang");
+
+  // Baris 1 — Keterangan (sama persis dengan template import)
+  sheet.mergeCells("A1:H1");
+  const infoCell = sheet.getCell("A1");
+  infoCell.value =
+    '📌 Kosongkan kolom "No SKU" jika ini barang baru (akan di-generate otomatis). Isi No SKU jika ingin update data barang yang sudah ada. Kolom "Barcode" dan "Min Stok" bersifat opsional. Isi kolom "Tanpa Barcode" dengan Ya/Tidak.';
+  infoCell.font = {
+    italic: true,
+    color: { argb: "FF2563EB" },
+    size: 11,
+  };
+  infoCell.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFDBEAFE" },
+  };
+  infoCell.alignment = {
+    vertical: "middle",
+    wrapText: true,
+  };
+  sheet.getRow(1).height = 40;
+
+  // Baris 2 — Header (sama persis dengan template import)
+  const headers = [
+    { header: "No SKU", width: 18 },
+    { header: "Nama Barang", width: 30 },
+    { header: "Kategori", width: 20 },
+    { header: "Harga Jual", width: 15 },
+    { header: "Satuan", width: 12 },
+    { header: "Barcode", width: 22 },
+    { header: "Min Stok", width: 12 },
+    { header: "Tanpa Barcode", width: 16 },
+  ];
+
+  const headerRow = sheet.getRow(2);
+  headers.forEach((h, i) => {
+    const col = i + 1;
+    const cell = headerRow.getCell(col);
+    cell.value = h.header;
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF059669" },
+    };
+    cell.alignment = { vertical: "middle", horizontal: "center" };
+    cell.border = {
+      bottom: { style: "thin", color: { argb: "FF047857" } },
+    };
+    sheet.getColumn(col).width = h.width;
+  });
+  headerRow.height = 28;
+
+  // Baris 3+ — Data produk
+  products.forEach((p, i) => {
+    const row = sheet.getRow(i + 3);
+    row.getCell(1).value = p.no_sku || "";
+    row.getCell(2).value = p.name || "";
+    row.getCell(3).value = p.category_name || "";
+    row.getCell(4).value = Number(p.selling_price || 0);
+    row.getCell(5).value = p.unit || "pcs";
+    row.getCell(6).value = p.barcode || "";
+    row.getCell(7).value = p.min_stock != null ? Number(p.min_stock) : 5;
+    row.getCell(8).value = p.is_non_barcode ? "Ya" : "Tidak";
+  });
+
+  // Data Validation — Dropdown Kategori, Satuan, Tanpa Barcode (untuk re-import)
+  const categories = db
+    .prepare("SELECT name FROM categories ORDER BY name COLLATE NOCASE ASC")
+    .all();
+  const categoryNames = categories.map((c) => c.name);
+
+  const lastDataRow = products.length + 3 + 100; // tambah 100 baris kosong untuk data baru
+
+  if (categoryNames.length > 0) {
+    for (let r = 3; r <= lastDataRow; r++) {
+      sheet.getCell(`C${r}`).dataValidation = {
+        type: "list",
+        allowBlank: true,
+        formulae: [`"${categoryNames.join(",")}"`],
+        showErrorMessage: true,
+        errorTitle: "Kategori Tidak Valid",
+        error: "Silakan pilih kategori dari daftar dropdown.",
+      };
+    }
+  }
+
+  const satuanList = ["pcs", "kg", "gr", "liter", "pack"];
+  for (let r = 3; r <= lastDataRow; r++) {
+    sheet.getCell(`E${r}`).dataValidation = {
+      type: "list",
+      allowBlank: true,
+      formulae: [`"${satuanList.join(",")}"`],
+      showErrorMessage: true,
+      errorTitle: "Satuan Tidak Valid",
+      error: "Silakan pilih satuan dari daftar dropdown.",
+    };
+  }
+
+  for (let r = 3; r <= lastDataRow; r++) {
+    sheet.getCell(`H${r}`).dataValidation = {
+      type: "list",
+      allowBlank: true,
+      formulae: ['"Ya,Tidak"'],
+      showErrorMessage: true,
+      errorTitle: "Nilai Tidak Valid",
+      error: 'Silakan pilih "Ya" atau "Tidak".',
+    };
+  }
+
+  // Format kolom numerik
+  sheet.getColumn(4).numFmt = "#,##0"; // Harga Jual
+  sheet.getColumn(7).numFmt = "0";     // Min Stok
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  return Buffer.from(buffer);
+}
+
+/* ===============================
+   EXPORT STOCK TO EXCEL
+   (Same format as stock import template — can be re-imported)
+================================= */
+async function exportStockExcel() {
+  // Query semua batch stok yang masih ada sisa, join dengan produk
+  const batches = db
+    .prepare(
+      `
+      SELECT
+        p.no_sku,
+        p.name AS product_name,
+        p.unit,
+        sb.quantity_remaining,
+        sb.cost_price,
+        sb.stock_date
+      FROM stock_batches sb
+      JOIN products p ON p.id = sb.product_id
+      WHERE sb.quantity_remaining > 0
+      ORDER BY p.name COLLATE NOCASE ASC, sb.stock_date ASC
+    `,
+    )
+    .all();
+
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "POS Kasir";
+  workbook.created = new Date();
+
+  const sheet = workbook.addWorksheet("Data Stok Barang");
+
+  // Baris 1 — Keterangan (sama dengan template import stok)
+  sheet.mergeCells("A1:F1");
+  const infoCell = sheet.getCell("A1");
+  infoCell.value =
+    '📌 Kolom "No SKU", "Nama Barang", dan "Satuan" sebagai referensi produk. File ini bisa digunakan untuk import stok di device/aplikasi baru. Baris yang Jumlah Stok-nya kosong akan di-skip saat import.';
+  infoCell.font = {
+    italic: true,
+    color: { argb: "FF2563EB" },
+    size: 11,
+  };
+  infoCell.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFDBEAFE" },
+  };
+  infoCell.alignment = {
+    vertical: "middle",
+    wrapText: true,
+  };
+  sheet.getRow(1).height = 40;
+
+  // Baris 2 — Header (sama persis dengan template import stok)
+  const headers = [
+    { header: "No SKU", width: 18 },
+    { header: "Nama Barang", width: 30 },
+    { header: "Satuan", width: 12 },
+    { header: "Jumlah Stok", width: 15 },
+    { header: "Harga Modal", width: 18 },
+    { header: "Tanggal Stok (YYYY-MM-DD)", width: 26 },
+  ];
+
+  const headerRow = sheet.getRow(2);
+  headers.forEach((h, i) => {
+    const col = i + 1;
+    const cell = headerRow.getCell(col);
+    cell.value = h.header;
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF059669" },
+    };
+    cell.alignment = { vertical: "middle", horizontal: "center" };
+    cell.border = {
+      bottom: { style: "thin", color: { argb: "FF047857" } },
+    };
+    sheet.getColumn(col).width = h.width;
+  });
+  headerRow.height = 28;
+
+  // Baris 3+ — Data batch stok
+  batches.forEach((b, i) => {
+    const row = sheet.getRow(i + 3);
+    row.getCell(1).value = b.no_sku || "";
+    row.getCell(2).value = b.product_name || "";
+    row.getCell(3).value = b.unit || "pcs";
+    row.getCell(4).value = Number(b.quantity_remaining || 0);
+    row.getCell(5).value = Number(b.cost_price || 0);
+    row.getCell(6).value = b.stock_date || "";
+  });
+
+  // Format kolom numerik
+  sheet.getColumn(4).numFmt = "#,##0";  // Jumlah Stok
+  sheet.getColumn(5).numFmt = "#,##0";  // Harga Modal
+  sheet.getColumn(6).numFmt = "@";      // Tanggal sebagai text
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  return Buffer.from(buffer);
+}
+
 module.exports = {
   generateTemplate,
   generateSKU,
   importProducts,
   generateStockTemplate,
   importStock,
+  exportSalesExcel,
+  exportProductsExcel,
+  exportStockExcel,
 };
