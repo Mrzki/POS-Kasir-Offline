@@ -84,28 +84,59 @@
     </div>
   </div>
 
-  <!-- TOP PRODUCTS -->
-  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex-none">
-    <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-award text-purple-500"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
-        <span class="font-extrabold text-slate-800 tracking-tight">PRODUK TERLARIS</span>
+  <!-- BOTTOM TABLES -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-none">
+
+    <!-- TOP PRODUCTS -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-award text-purple-500"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+          <span class="font-extrabold text-slate-800 tracking-tight">PRODUK TERLARIS</span>
+        </div>
+        <span class="text-xs font-bold leading-none tracking-wider uppercase bg-white border border-slate-200 text-slate-500 px-3 py-1 rounded-full">Berdasarkan Qty</span>
       </div>
-      <span class="text-xs font-bold leading-none tracking-wider uppercase bg-white border border-slate-200 text-slate-500 px-3 py-1 rounded-full">Berdasarkan Qty</span>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead class="bg-white border-b border-slate-200">
+            <tr>
+              <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-widest">Produk</th>
+              <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-widest text-right w-32">Total Qty</th>
+            </tr>
+          </thead>
+          <tbody id="top-products-body" class="divide-y divide-slate-100 bg-white">
+            <!-- Rows will be injected by dashboard.js -->
+          </tbody>
+        </table>
+      </div>
     </div>
 
-    <div class="overflow-x-auto">
-      <table class="w-full text-left border-collapse">
-        <thead class="bg-white border-b border-slate-200">
-          <tr>
-            <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-widest">Produk</th>
-            <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-widest text-right w-32">Total Qty</th>
-          </tr>
-        </thead>
-        <tbody id="top-products-body" class="divide-y divide-slate-100 bg-white">
-          <!-- Rows will be injected by dashboard.js -->
-        </tbody>
-      </table>
+    <!-- LOW STOCK PRODUCTS -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-200 bg-orange-50 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-triangle-alert text-orange-500"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+          <span class="font-extrabold text-slate-800 tracking-tight">STOK HAMPIR HABIS</span>
+        </div>
+        <span class="text-xs font-bold leading-none tracking-wider uppercase bg-white border border-orange-200 text-orange-500 px-3 py-1 rounded-full">Peringatan</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead class="bg-white border-b border-slate-200">
+            <tr>
+              <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-widest">Produk</th>
+              <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-widest text-right w-24">Stok</th>
+              <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-widest text-right w-24">Min</th>
+            </tr>
+          </thead>
+          <tbody id="low-stock-body" class="divide-y divide-slate-100 bg-white">
+            <!-- Rows will be injected by dashboard.js -->
+          </tbody>
+        </table>
+      </div>
     </div>
+
   </div>
 </div>

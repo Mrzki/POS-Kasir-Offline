@@ -88,8 +88,36 @@ function getTopProducts(date, limit = 5) {
     .all(date, limit);
 }
 
+/**
+ * Produk dengan stok hampir habis (total_stock <= min_stock)
+ * Hanya produk aktif yang ditampilkan
+ */
+function getLowStockProducts(limit = 10) {
+  return db
+    .prepare(
+      `
+    SELECT
+      p.name AS product_name,
+      p.unit,
+      p.min_stock,
+      COALESCE(SUM(sb.quantity_remaining), 0) AS total_stock
+    FROM products p
+    LEFT JOIN stock_batches sb
+      ON sb.product_id = p.id
+     AND sb.quantity_remaining > 0
+    WHERE p.is_active = 1
+    GROUP BY p.id, p.name, p.unit, p.min_stock
+    HAVING total_stock <= p.min_stock
+    ORDER BY total_stock ASC
+    LIMIT ?
+  `,
+    )
+    .all(limit);
+}
+
 module.exports = {
   getDailySummary,
   getHourlyAnalytics,
   getTopProducts,
+  getLowStockProducts,
 };

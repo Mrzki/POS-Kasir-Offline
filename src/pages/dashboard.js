@@ -5,6 +5,7 @@
     const cardRevenue = document.getElementById("card-revenue");
     const cardProfit = document.getElementById("card-profit");
     const topProductsBody = document.getElementById("top-products-body");
+    const lowStockBody = document.getElementById("low-stock-body");
     const dashboardRoot = document.querySelector(".dashboard");
 
     if (
@@ -188,6 +189,38 @@
       });
     }
 
+    async function loadLowStockProducts() {
+      if (!lowStockBody) return;
+
+      const products = await window.api.getLowStockProducts();
+      if (signal.aborted) return;
+
+      lowStockBody.innerHTML = "";
+
+      if (!products.length) {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td colspan="3" class="px-6 py-8 text-center text-emerald-500 italic">
+            ✅ Semua stok aman.
+          </td>
+        `;
+        lowStockBody.appendChild(row);
+        return;
+      }
+
+      products.forEach((product) => {
+        const row = document.createElement("tr");
+        const isZero = product.total_stock === 0;
+        row.className = `hover:bg-slate-50 transition-colors ${isZero ? "bg-red-50" : ""}`;
+        row.innerHTML = `
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium ${isZero ? "text-red-700" : "text-slate-700"}">${product.product_name}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold ${isZero ? "text-red-600" : "text-orange-600"}">${product.total_stock}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-slate-500">${product.min_stock}</td>
+        `;
+        lowStockBody.appendChild(row);
+      });
+    }
+
     async function loadDashboard(date) {
       const summary = await window.api.getDashboardSummary(date);
       if (signal.aborted) return;
@@ -217,6 +250,7 @@
 
       queueResize();
       await loadTopProducts(date);
+      await loadLowStockProducts();
     }
 
     window.addEventListener("resize", queueResize, { signal });

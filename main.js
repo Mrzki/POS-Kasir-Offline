@@ -184,6 +184,10 @@ ipcMain.handle("dashboard:get-top-products", (event, { date, limit }) => {
   return dashboardService.getTopProducts(date, limit ?? 5);
 });
 
+ipcMain.handle("dashboard:get-low-stock", () => {
+  return dashboardService.getLowStockProducts();
+});
+
 ipcMain.handle("open-dashboard", () => {
   openDashboardWindow();
   return true;

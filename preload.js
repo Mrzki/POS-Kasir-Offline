@@ -33,6 +33,9 @@ contextBridge.exposeInMainWorld("api", {
   getDashboardTopProducts: (date, limit = 5) =>
     ipcRenderer.invoke("dashboard:get-top-products", { date, limit }),
 
+  getLowStockProducts: () =>
+    ipcRenderer.invoke("dashboard:get-low-stock"),
+
   openDashboard: () => ipcRenderer.invoke("open-dashboard"),
 
   getProducts: () => ipcRenderer.invoke("products:get-all"),
