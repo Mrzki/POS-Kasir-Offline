@@ -58,9 +58,24 @@ document.querySelectorAll(".sidebar-menu li[data-page]").forEach((item) => {
   });
 });
 
+document.querySelectorAll(".submenu-header").forEach((header) => {
+  header.addEventListener("click", () => {
+    const submenu = header.parentElement;
+    submenu.classList.toggle("open");
+  });
+});
+
 function setActiveMenu(page) {
   document.querySelectorAll(".sidebar-menu li[data-page]").forEach((item) => {
-    item.classList.toggle("active", item.dataset.page === page);
+    const isActive = item.dataset.page === page;
+    item.classList.toggle("active", isActive);
+    
+    if (isActive && item.classList.contains("submenu-item")) {
+      const submenu = item.closest(".submenu");
+      if (submenu) {
+        submenu.classList.add("open");
+      }
+    }
   });
 }
 

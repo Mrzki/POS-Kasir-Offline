@@ -61,52 +61,133 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar-logo .logo-icon {
+  color: var(--btn-success);
+}
+
+.sidebar-logo strong {
+  font-size: 16px;
+  letter-spacing: 0.5px;
+  font-weight: 600;
 }
 
 .sidebar-header button {
   background: none;
   border: none;
-  color: #ffffff;
-  font-size: 20px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 24px;
   cursor: pointer;
+  transition: color 0.2s;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-header button:hover {
+  color: #ffffff;
 }
 
 .sidebar-menu {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.sidebar-menu li {
-  padding: 8px 6px;
+.menu-item, .submenu-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.8);
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.menu-item:hover, .submenu-header:hover,
+.menu-item.active {
+  background: var(--sidebar-hover);
+  color: #ffffff;
+}
+
+.menu-item svg, .submenu-title svg {
+  color: rgba(255, 255, 255, 0.5);
+  transition: color 0.2s ease;
+}
+
+.menu-item:hover svg, .submenu-header:hover svg,
+.menu-item.active svg {
+  color: var(--btn-success);
+}
+
+.submenu {
+  display: flex;
+  flex-direction: column;
+}
+
+.submenu-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.submenu-header .chevron {
+  margin-left: auto;
+  transition: transform 0.3s ease;
+}
+
+.submenu.open .chevron {
+  transform: rotate(180deg);
+}
+
+.submenu-content {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out, margin-top 0.3s ease;
+}
+
+.submenu.open .submenu-content {
+  max-height: 200px;
+  margin-top: 4px;
+}
+
+.submenu-item {
+  padding: 10px 12px 10px 44px;
   cursor: pointer;
   border-radius: 6px;
-}
-
-.sidebar-menu li:hover,
-.sidebar-menu li.active {
-  background: var(--sidebar-hover);
-}
-
-.sidebar-menu li.submenu {
-  cursor: default;
-  padding-bottom: 2px;
-}
-
-.submenu > ul {
-  margin-top: 6px;
-  margin-left: 12px;
-  padding-left: 0;
-}
-
-.submenu ul li {
+  color: rgba(255, 255, 255, 0.6);
   font-size: 13px;
-  color: #cfd8dc;
+  transition: all 0.2s ease;
 }
 
-.submenu ul li.active {
+.submenu-item:hover, .submenu-item.active {
   color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.submenu-item.active {
+  color: var(--btn-success);
+  font-weight: 600;
 }
 
 .overlay {
@@ -122,7 +203,7 @@ body {
 }
 
 .app-container {
-  padding-top: 60px;
+  padding-top: 0;
   min-height: 100vh;
 }
 

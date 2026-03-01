@@ -1,6 +1,6 @@
-<div class="h-[calc(100vh-60px)] flex flex-col bg-slate-50 p-4 md:p-6 overflow-hidden gap-6">
+<div class="h-screen flex flex-col bg-slate-50 p-4 md:p-6 overflow-hidden gap-6">
   <!-- HEADER & ACTIONS -->
-  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 flex-none">
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 flex-none pl-[52px]">
     <div class="flex items-center gap-4">
       <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white font-bold shadow-sm">
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-boxes"><path d="M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42Z"/><path d="m7 16.5-4.74-2.85"/><path d="m7 16.5 5-3"/><path d="M7 16.5v5.17"/><path d="M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3Z"/><path d="m17 16.5-5-3"/><path d="m17 16.5 4.74-2.85"/><path d="M17 16.5v5.17"/><path d="M7.97 4.42A2 2 0 0 0 7 6.13v4.37l5 3 5-3V6.13a2 2 0 0 0-.97-1.71l-3-1.8a2 2 0 0 0-2.06 0l-3 1.8Z"/><path d="M12 8 7.26 5.15"/><path d="m12 8 4.74-2.85"/><path d="M12 13.5V8"/></svg>
@@ -10,16 +10,7 @@
         <p class="text-sm font-medium text-slate-500 mt-0.5">Kelola stok masuk dan keluar berbasis batch FIFO.</p>
       </div>
     </div>
-
-    <button id="btn-export-stock" class="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 ring-offset-2 whitespace-nowrap">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      <span>Export Stok</span>
-    </button>
-
-    <button id="btn-open-stock-import" class="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ring-offset-2 whitespace-nowrap">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-      <span>Import Stok</span>
-    </button>
+    
   </div>
 
   <div id="stock-message" role="status" aria-live="polite" class="hidden"></div>
@@ -27,22 +18,36 @@
   <!-- TABLE CARD -->
   <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col flex-1 min-h-0">
     
-    <!-- TOOLBAR (Search & Count) -->
+    <!-- TOOLBAR (Search, Count & Actions) -->
     <div class="flex flex-col md:flex-row items-center justify-between gap-4 p-4 border-b border-slate-100 bg-white flex-none">
-      <div class="relative w-full md:w-80">
-        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <div class="flex flex-col md:flex-row items-center w-full md:w-auto gap-3">
+        <div class="relative w-full md:w-80">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          </div>
+          <input
+            id="stock-search"
+            type="search"
+            placeholder="Cari produk, kategori, barcode..."
+            autocomplete="off"
+            class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 outline-none focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all placeholder:font-medium placeholder:text-slate-400"
+          />
         </div>
-        <input
-          id="stock-search"
-          type="search"
-          placeholder="Cari produk, kategori, barcode..."
-          autocomplete="off"
-          class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 outline-none focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all placeholder:font-medium placeholder:text-slate-400"
-        />
+        <div id="stock-count" class="px-4 py-2 bg-slate-100 rounded-xl text-xs font-bold text-slate-600 border border-slate-200 whitespace-nowrap text-center self-stretch md:self-auto flex items-center justify-center">
+          0 produk
+        </div>
       </div>
-      <div id="stock-count" class="px-4 py-1.5 bg-slate-100 rounded-lg text-xs font-bold text-slate-600 border border-slate-200 whitespace-nowrap">
-        0 produk
+      
+      <div class="flex items-center justify-end gap-3 w-full md:w-auto flex-wrap md:flex-nowrap">
+        <button id="btn-export-stock" class="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 ring-offset-2 whitespace-nowrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Export Stok</span>
+        </button>
+
+        <button id="btn-open-stock-import" class="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ring-offset-2 whitespace-nowrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <span>Import Stok</span>
+        </button>
       </div>
     </div>
 
