@@ -52,12 +52,40 @@ function getCategories() {
 }
 
 /* ===============================
+   GENERATE SKU (AUTO-INCREMENT)
+   Format: ITM-001, ITM-002, ...
+================================= */
+function generateSKU() {
+  const row = db
+    .prepare(
+      `
+      SELECT no_sku,
+             CAST(SUBSTR(no_sku, 5) AS INTEGER) AS sku_num
+      FROM products
+      WHERE no_sku LIKE 'ITM-%'
+      ORDER BY sku_num DESC
+      LIMIT 1
+    `,
+    )
+    .get();
+
+  let nextNumber = 1;
+
+  if (row && row.sku_num) {
+    nextNumber = row.sku_num + 1;
+  }
+
+  return `ITM-${String(nextNumber).padStart(3, "0")}`;
+}
+
+/* ===============================
    CREATE PRODUCT
 ================================= */
 function createProduct(data) {
   const { no_sku, barcode, name, category_id, selling_price, unit, min_stock, is_non_barcode } = data;
 
   const id = crypto.randomUUID();
+  const sku = no_sku || generateSKU();
 
   db.prepare(
     `
@@ -76,7 +104,7 @@ function createProduct(data) {
   `,
   ).run(
     id,
-    no_sku || null,
+    sku,
     barcode || null,
     name,
     category_id || null,
