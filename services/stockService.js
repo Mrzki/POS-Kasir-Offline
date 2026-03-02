@@ -106,6 +106,37 @@ function getAllStock() {
     .all();
 }
 
+// Cari stok berdasarkan keyword (nama/barcode/kategori) — server-side search.
+function searchStock(keyword) {
+  const pattern = `%${keyword}%`;
+  return db
+    .prepare(
+      `
+      SELECT
+        p.id AS product_id,
+        p.name,
+        p.barcode,
+        c.name AS category_name,
+        p.unit,
+        p.is_active,
+        COALESCE(SUM(sb.quantity_remaining), 0) AS total_stock,
+        COUNT(sb.id) AS batch_count
+      FROM products p
+      LEFT JOIN categories c
+        ON c.id = p.category_id
+      LEFT JOIN stock_batches sb
+        ON sb.product_id = p.id
+       AND sb.quantity_remaining > 0
+      WHERE p.name LIKE ?
+         OR p.barcode LIKE ?
+         OR c.name LIKE ?
+      GROUP BY p.id, p.name, p.barcode, c.name, p.unit, p.is_active
+      ORDER BY p.name COLLATE NOCASE ASC
+    `,
+    )
+    .all(pattern, pattern, pattern);
+}
+
 // Detail stok per produk: total + seluruh batch tersisa (FIFO order).
 function getStock(productId) {
   const product = ensureProduct(productId);
@@ -328,6 +359,7 @@ function deleteStockBatch(batchId) {
 module.exports = {
   getStock,
   getAllStock,
+  searchStock,
   addStock,
   removeStock,
   updateStockBatch,

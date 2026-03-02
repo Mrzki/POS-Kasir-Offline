@@ -38,6 +38,8 @@
       isBusy: false,
       feedbackTimerId: null,
       detailRequestVersion: 0,
+      searchTimerId: null,
+      searchVersion: 0,
     };
 
     function escapeHtml(value) {
@@ -126,28 +128,28 @@
       );
     }
 
-    function getFilteredProducts() {
-      const keyword = state.keyword.trim().toLowerCase();
-      if (!keyword) return state.products;
+    async function performSearch(keyword) {
+      const version = ++state.searchVersion;
 
-      return state.products.filter((row) => {
-        const searchable = [
-          row.name,
-          row.category_name,
-          row.unit,
-          row.barcode,
-          row.product_id,
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
+      try {
+        let results;
+        if (!keyword) {
+          results = state.products;
+        } else {
+          results = await window.api.searchStock(keyword);
+          if (signal.aborted || version !== state.searchVersion) return;
+        }
 
-        return searchable.includes(keyword);
-      });
+        renderProductsTableFromRows(results);
+        setBusy(state.isBusy);
+      } catch (error) {
+        if (!signal.aborted && version === state.searchVersion) {
+          console.error("[Stock] search error:", error);
+        }
+      }
     }
 
-    function renderProductsTable() {
-      const rows = getFilteredProducts();
+    function renderProductsTableFromRows(rows) {
       countEl.textContent = `${rows.length} / ${state.products.length} produk`;
       productsBody.innerHTML = "";
 
@@ -707,7 +709,7 @@
       if (signal.aborted) return;
 
       state.products = Array.isArray(rows) ? rows : [];
-      renderProductsTable();
+      renderProductsTableFromRows(state.products);
 
       if (
         state.sidebarMode &&
@@ -847,9 +849,16 @@
     searchInput.addEventListener(
       "input",
       () => {
-        state.keyword = searchInput.value || "";
-        renderProductsTable();
-        setBusy(state.isBusy);
+        state.keyword = (searchInput.value || "").trim();
+
+        if (state.searchTimerId) {
+          clearTimeout(state.searchTimerId);
+        }
+
+        state.searchTimerId = setTimeout(() => {
+          state.searchTimerId = null;
+          performSearch(state.keyword);
+        }, 300);
       },
       { signal },
     );

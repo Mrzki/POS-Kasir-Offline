@@ -56,6 +56,7 @@ contextBridge.exposeInMainWorld("api", {
 
   // Stock
   getAllStock: () => ipcRenderer.invoke("stock:get-all"),
+  searchStock: (keyword) => ipcRenderer.invoke("stock:search", keyword),
 
   downloadStockTemplate: () => ipcRenderer.invoke("stock:download-template"),
   importStock: () => ipcRenderer.invoke("stock:import-excel"),

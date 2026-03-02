@@ -58,6 +58,8 @@
       isBusy: false,
       feedbackTimerId: null,
       confirmResolver: null,
+      searchTimerId: null,
+      searchVersion: 0,
     };
 
     function escapeHtml(value) {
@@ -90,17 +92,25 @@
       return `Rp ${Number(value || 0).toLocaleString("id-ID")}`;
     }
 
-    function getFilteredProducts() {
-      const keyword = state.keyword.trim().toLowerCase();
-      if (!keyword) return state.allProducts;
+    async function performSearch(keyword) {
+      const version = ++state.searchVersion;
 
-      return state.allProducts.filter((item) => {
-        const searchable = [item.name, item.barcode, item.category_name, item.unit]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-        return searchable.includes(keyword);
-      });
+      try {
+        let results;
+        if (!keyword) {
+          results = state.allProducts;
+        } else {
+          results = await window.api.searchProducts(keyword);
+          if (signal.aborted || version !== state.searchVersion) return;
+        }
+
+        renderTable(results);
+        setBusy(state.isBusy);
+      } catch (error) {
+        if (!signal.aborted && version === state.searchVersion) {
+          console.error("[Products] search error:", error);
+        }
+      }
     }
 
     function renderCategories() {
@@ -161,7 +171,7 @@
     }
 
     function renderProducts() {
-      renderTable(getFilteredProducts());
+      renderTable(state.allProducts);
       setBusy(state.isBusy);
     }
 
@@ -354,8 +364,16 @@
     searchInput.addEventListener(
       "input",
       () => {
-        state.keyword = searchInput.value || "";
-        renderProducts();
+        state.keyword = (searchInput.value || "").trim();
+
+        if (state.searchTimerId) {
+          clearTimeout(state.searchTimerId);
+        }
+
+        state.searchTimerId = setTimeout(() => {
+          state.searchTimerId = null;
+          performSearch(state.keyword);
+        }, 300);
       },
       { signal },
     );

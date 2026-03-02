@@ -1,7 +1,49 @@
 const path = require("path");
+const fs = require("fs");
 const Database = require("better-sqlite3");
 
-const dbPath = path.join(__dirname, "kasir.db");
+/**
+ * Menentukan path database berdasarkan environment:
+ * - Development: menggunakan file di folder project (database/kasir.db)
+ * - Production (packaged): menyalin database ke userData agar writable
+ */
+function resolveDbPath() {
+  const isPackaged =
+    typeof process !== "undefined" &&
+    process.type !== "browser" &&
+    require("electron").app?.isPackaged;
+
+  if (!isPackaged) {
+    // Development — gunakan database langsung dari folder project
+    return path.join(__dirname, "kasir.db");
+  }
+
+  // Production — database harus di folder userData agar writable
+  const { app } = require("electron");
+  const userDataPath = app.getPath("userData");
+  const targetDbPath = path.join(userDataPath, "kasir.db");
+
+  if (!fs.existsSync(targetDbPath)) {
+    // First run: salin database template dari resources
+    const sourceDbPath = path.join(process.resourcesPath, "database", "kasir.db");
+
+    if (fs.existsSync(sourceDbPath)) {
+      fs.copyFileSync(sourceDbPath, targetDbPath);
+      console.log("Database copied to userData:", targetDbPath);
+    } else {
+      // Fallback: coba dari __dirname (jika tidak pakai extraResources)
+      const fallbackPath = path.join(__dirname, "kasir.db");
+      if (fs.existsSync(fallbackPath)) {
+        fs.copyFileSync(fallbackPath, targetDbPath);
+        console.log("Database copied from fallback:", targetDbPath);
+      }
+    }
+  }
+
+  return targetDbPath;
+}
+
+const dbPath = resolveDbPath();
 
 console.log("Using database:", dbPath);
 

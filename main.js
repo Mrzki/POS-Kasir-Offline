@@ -358,6 +358,10 @@ ipcMain.handle("stock:get-all", () => {
   return stockService.getAllStock();
 });
 
+ipcMain.handle("stock:search", (event, keyword) => {
+  return stockService.searchStock(keyword);
+});
+
 ipcMain.handle("stock:get", (event, productId) => {
   return stockService.getStock(productId);
 });
@@ -565,6 +569,7 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 1000,
     height: 700,
+    icon: path.join(__dirname, "build", "icon.ico"),
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
     },
