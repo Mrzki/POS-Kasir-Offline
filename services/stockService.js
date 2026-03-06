@@ -153,7 +153,6 @@ function getStock(productId) {
         created_at
       FROM stock_batches
       WHERE product_id = ?
-        AND quantity_remaining > 0
       ORDER BY stock_date ASC, created_at ASC, id ASC
     `,
     )

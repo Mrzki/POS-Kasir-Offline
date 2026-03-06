@@ -2,8 +2,8 @@
   <!-- Header -->
   <div class="bg-white h-16 pl-[68px] pr-6 flex items-center justify-between border-b border-slate-200 shadow-sm flex-none">
     <div class="flex items-center gap-3">
-      <div class="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-bold">POS</div>
-      <h1 class="text-xl font-bold text-slate-800 tracking-tight">KASIR TOKO</h1>
+      <img src="logo/logo.png" alt="Logo POS" class="w-8 h-8 object-contain" />
+      <h1 class="text-xl font-bold text-slate-800 tracking-tight">SANJAYA BAROKAH</h1>
     </div>
     <div class="text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200 shadow-sm">
       <span id="session-indicator">Mode: Input Barang</span>
@@ -81,7 +81,7 @@
       <!-- Left: Receipt Preview -->
       <section class="w-full md:w-80 lg:w-96 flex-none flex flex-col gap-2">
         <h3 class="text-sm font-semibold text-slate-500 uppercase tracking-wider ml-1">Preview Struk</h3>
-        <div class="bg-white border border-slate-200 shadow-sm rounded-xl p-4 overflow-y-auto flex-1 custom-scrollbar">
+        <div class="bg-white border border-slate-200 shadow-sm rounded-xl p-4 overflow-y-auto flex-1 custom-scrollbar flex items-start justify-center">
           <div id="receipt-preview-container" class="receipt-preview-container text-sm font-mono leading-tight">
             <!-- Receipt content rendered here -->
           </div>
@@ -113,7 +113,7 @@
         </div>
 
         <!-- Shortcuts -->
-        <div class="flex-1 flex flex-col gap-4 min-h-0">
+        <div class="flex flex-col gap-4 min-h-0">
           <div class="grid grid-cols-2 md:grid-cols-3 gap-3" id="nominal-shortcuts">
             <button type="button" class="h-14 bg-white border border-slate-200 rounded-xl font-semibold text-slate-700 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700 shadow-sm transition-all" data-amount="1000">Rp 1.000</button>
             <button type="button" class="h-14 bg-white border border-slate-200 rounded-xl font-semibold text-slate-700 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700 shadow-sm transition-all" data-amount="5000">Rp 5.000</button>

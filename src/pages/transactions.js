@@ -183,7 +183,7 @@
       filtered.forEach((tx) => {
         const isVoided = !!tx.is_voided;
         const statusClass = isVoided ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700";
-        const statusLabel = isVoided ? "Void" : "Selesai";
+        const statusLabel = isVoided ? "Cancel" : "Selesai";
 
         const tr = document.createElement("tr");
         tr.className = "hover:bg-slate-50/50 transition-colors group cursor-pointer";
@@ -200,7 +200,7 @@
               <button type="button" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500" data-action="detail" data-id="${escapeHtml(tx.id)}">Detail</button>
               ${
                 !isVoided
-                  ? `<button type="button" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500" data-action="void" data-id="${escapeHtml(tx.id)}">Void</button>`
+                  ? `<button type="button" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500" data-action="void" data-id="${escapeHtml(tx.id)}">Cancel</button>`
                   : ""
               }
             </div>
@@ -257,7 +257,7 @@
       const paymentAmount = Number(tx.payment_amount || 0);
       const changeAmount = paymentAmount - totalAmount;
       const isVoided = !!tx.is_voided || tx.type === "void";
-      const statusLabel = isVoided ? "Void" : "Selesai";
+      const statusLabel = isVoided ? "Cancel" : "Selesai";
       const statusClass = isVoided ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700";
 
       detailContent.innerHTML = `
@@ -340,7 +340,7 @@
       if (!tx || !canVoidTransaction(tx)) return;
 
       state.selectedTransactionId = tx.id;
-      voidInfo.textContent = `Void transaksi ${tx.transaction_number}? Stok akan dikembalikan.`;
+      voidInfo.textContent = `Cancel transaksi ${tx.transaction_number}? Stok akan dikembalikan.`;
       voidModal.classList.add("active");
       syncControls();
     }
@@ -357,12 +357,12 @@
 
         voidModal.classList.remove("active");
         state.selectedTransactionId = null;
-        showMessage("success", "Transaksi berhasil di-void.");
+        showMessage("success", "Transaksi berhasil di-cancel.");
 
         await loadTransactions();
       } catch (error) {
         if (!signal.aborted) {
-          showMessage("error", error.message || "Void transaksi gagal.", true);
+          showMessage("error", error.message || "Cancel transaksi gagal.", true);
         }
       } finally {
         if (!signal.aborted) {
@@ -459,7 +459,7 @@
       () => {
         submitVoidTransaction().catch((error) => {
           if (!signal.aborted) {
-            showMessage("error", error.message || "Void transaksi gagal.", true);
+            showMessage("error", error.message || "Cancel transaksi gagal.", true);
           }
         });
       },

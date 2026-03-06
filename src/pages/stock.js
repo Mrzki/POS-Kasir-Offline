@@ -801,7 +801,7 @@
 
         showMessage("success", "Stok berhasil ditambahkan.");
         await loadProducts();
-        await refreshSidebarDetail();
+        closeSidebar();
       } catch (error) {
         if (!signal.aborted) {
           showMessage("error", error.message, true);
@@ -834,7 +834,7 @@
 
         showMessage("success", "Stok keluar berhasil diproses FIFO.");
         await loadProducts();
-        await refreshSidebarDetail();
+        closeSidebar();
       } catch (error) {
         if (!signal.aborted) {
           showMessage("error", error.message, true);

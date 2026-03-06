@@ -596,21 +596,39 @@ function printReceipt(transactionId) {
   });
 
   // Step 2: Tunggu signal receipt-ready (data sudah di-render)
-  const onReceiptReady = () => {
+  const onReceiptReady = async () => {
     if (win.isDestroyed()) return;
 
-    win.webContents.print(
-      {
-        silent: false,        // Tampilkan dialog print
-        printBackground: true, // Cetak background/warna
-      },
-      (success, failureReason) => {
-        if (!success && failureReason) {
-          console.error("Print gagal:", failureReason);
-        }
+    try {
+      const printers = await win.webContents.getPrintersAsync();
+
+      const defaultPrinter = printers.find(p => p.isDefault);
+      const targetPrinter = defaultPrinter || printers[0];
+
+      if (!targetPrinter) {
         if (!win.isDestroyed()) win.close();
-      },
-    );
+        return;
+      }
+
+      win.webContents.print(
+        {
+          silent: true,
+          printBackground: true,
+          deviceName: targetPrinter.name,
+          margins: { marginType: "none" },
+          pageSize: { width: 58000, height: 210000 },
+        },
+        (success, failureReason) => {
+          if (!success && failureReason) {
+            console.error("Print gagal:", failureReason);
+          }
+          if (!win.isDestroyed()) win.close();
+        },
+      );
+    } catch (err) {
+      console.error("Print error:", err);
+      if (!win.isDestroyed()) win.close();
+    }
   };
 
   ipcMain.once("receipt-ready", onReceiptReady);

@@ -1,6 +1,6 @@
 (() => {
   const STYLE_ID = "receipt-renderer-style";
-  const LINE_WIDTH = 42;
+  const LINE_WIDTH = 33; // 58mm thermal paper, sedikit lebih lebar
   const DASH = "-";
 
   // ──── Utility ────
@@ -92,24 +92,31 @@
     return " ".repeat(w - len) + DASH.repeat(len);
   }
 
-  // "           LABEL :    AMOUNT" — right-aligned summary row
+  // Right-aligned summary: "      LABEL :   AMOUNT"
   function summaryRow(label, amount, w = LINE_WIDTH) {
     const amtStr = formatAmount(amount);
-    const right = `${label} :${amtStr.padStart(10)}`;
+    const right = `${label} :${amtStr.padStart(9)}`;
     return right.padStart(w);
   }
 
-  // 1-line item: NAME(21) QTY(4) PRICE(7) SUBTOTAL(10) = 42
-  function itemLine(item, w = LINE_WIDTH) {
-    const qtyStr = String(item.quantity).padStart(4);
-    const priceStr = String(item.sellingPrice).padStart(7);
-    const subStr = formatAmount(item.subtotal).padStart(10);
-    const rightPart = qtyStr + priceStr + subStr;
-    const nameW = w - rightPart.length;
+  // Item: 2-line format for 32-char width
+  // Line 1: ITEM NAME (full width, truncated)
+  // Line 2:   QTY x PRICE         SUBTOTAL
+  function itemLines(item, w = LINE_WIDTH) {
+    const lines = [];
     const name = item.name.toUpperCase();
-    const display =
-      name.length > nameW ? name.substring(0, nameW) : name.padEnd(nameW);
-    return display + rightPart;
+    lines.push(name.length > w ? name.substring(0, w) : name);
+
+    const left = `  ${item.quantity} x ${formatAmount(item.sellingPrice)}`;
+    const right = formatAmount(item.subtotal);
+    const gap = w - left.length - right.length;
+    const line2 =
+      gap > 0
+        ? left + " ".repeat(gap) + right
+        : left + " " + right;
+    lines.push(line2);
+
+    return lines;
   }
 
   // Word-wrap long text into multiple lines
@@ -137,22 +144,32 @@
     const L = [];
 
     // ── Header ──
-    L.push(dashes());
     L.push(center(data.storeName.toUpperCase()));
     L.push(center(data.storeTagline.toUpperCase()));
-    L.push(center(data.storeAddress.toUpperCase()));
+    // Word-wrap address if needed
+    wordWrap(data.storeAddress.toUpperCase(), LINE_WIDTH).forEach((line) =>
+      L.push(center(line)),
+    );
 
     // ── Transaction info ──
     L.push(dashes());
     const txLine = `${data.transactionDate}/${data.transactionNumber}`;
-    L.push(center(txLine.toUpperCase()));
+    // Word-wrap transaction line if it exceeds width
+    if (txLine.length <= LINE_WIDTH) {
+      L.push(center(txLine.toUpperCase()));
+    } else {
+      L.push(center(data.transactionDate));
+      L.push(center(data.transactionNumber.toUpperCase()));
+    }
     L.push(dashes());
 
     // ── Items ──
     if (!data.items.length) {
       L.push(center("(BELUM ADA ITEM)"));
     } else {
-      data.items.forEach((item) => L.push(itemLine(item)));
+      data.items.forEach((item) => {
+        itemLines(item).forEach((line) => L.push(line));
+      });
     }
 
     // ── Summary ──
@@ -168,6 +185,10 @@
     L.push(center(data.footerLine1.toUpperCase()));
     const f2 = data.footerLine2.toUpperCase();
     wordWrap(f2, LINE_WIDTH).forEach((line) => L.push(center(line)));
+
+    // ── Bottom margin for tear ──
+    // Add empty lines so the footer doesn't get cut when tearing
+    for (let i = 0; i < 15; i++) L.push("");
 
     return L.join("\n");
   }
@@ -190,7 +211,7 @@
       }
 
       .receipt-render pre {
-        font-family: "Courier New", Consolas, monospace;
+        font-family: "Roboto Mono", Consolas, "Courier New", monospace;
         font-size: 11px;
         line-height: 1.15;
         margin: 0;
@@ -201,22 +222,42 @@
       }
 
       @media print {
-        body {
-          margin: 0;
-          padding: 0;
+        @page {
+          size: 58mm auto;
+          margin: 0 !important;
+        }
+
+        html, body {
+          width: 58mm;
+          margin: 0 !important;
+          padding: 0 !important;
           background: #fff;
         }
 
         .receipt-render {
-          width: auto !important;
-          margin: 0;
-          padding: 2mm;
+          width: 100% !important;
+          margin: 0 !important;
+          padding: 0 0 80mm 0 !important;
+          box-sizing: border-box;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
         }
 
         .receipt-render pre {
-          font-size: 12px;
+          font-size: 9px;
+          line-height: 1.15;
+          margin: 0;
+          padding: 0;
+        }
+
+        .receipt-tear-spacer {
+          color: #fff;
+          font-family: "Roboto Mono", monospace;
+          font-size: 9px;
+          line-height: 1.15;
+          margin: 0;
+          padding: 0;
+          white-space: pre;
         }
       }
     `;
@@ -242,6 +283,18 @@
     const pre = doc.createElement("pre");
     pre.textContent = text;
     wrapper.appendChild(pre);
+
+    // Spacer untuk ruang potong kertas thermal
+    // Menggunakan div dengan height eksplisit + pre dengan banyak newline
+    // agar printer thermal pasti feed kertas
+    const spacer = doc.createElement("div");
+    spacer.style.cssText = "height: 150px; width: 100%; background: #fff;";
+    wrapper.appendChild(spacer);
+
+    const feedLines = doc.createElement("pre");
+    feedLines.style.cssText = "margin:0; padding:0; font-size:9px; line-height:1.2; color:#fff; white-space:pre;";
+    feedLines.textContent = "\n".repeat(40);
+    wrapper.appendChild(feedLines);
 
     containerElement.innerHTML = "";
     containerElement.appendChild(wrapper);
