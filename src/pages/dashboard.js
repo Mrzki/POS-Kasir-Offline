@@ -54,6 +54,15 @@
       return `${y}-${m}-${d}`;
     }
 
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
     // Current selected date in ISO format for backend
     let currentDateISO = formatDateISO(new Date());
 
@@ -182,8 +191,8 @@
         const row = document.createElement("tr");
         row.className = "hover:bg-slate-50 transition-colors";
         row.innerHTML = `
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700 font-medium">${product.product_name}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700 text-right font-bold">${product.total_qty}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700 font-medium">${escapeHtml(product.product_name)}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700 text-right font-bold">${escapeHtml(product.total_qty)}</td>
         `;
         topProductsBody.appendChild(row);
       });
@@ -213,9 +222,9 @@
         const isZero = product.total_stock === 0;
         row.className = `hover:bg-slate-50 transition-colors ${isZero ? "bg-red-50" : ""}`;
         row.innerHTML = `
-          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium ${isZero ? "text-red-700" : "text-slate-700"}">${product.product_name}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold ${isZero ? "text-red-600" : "text-orange-600"}">${product.total_stock}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-slate-500">${product.min_stock}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium ${isZero ? "text-red-700" : "text-slate-700"}">${escapeHtml(product.product_name)}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold ${isZero ? "text-red-600" : "text-orange-600"}">${escapeHtml(product.total_stock)}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-slate-500">${escapeHtml(product.min_stock)}</td>
         `;
         lowStockBody.appendChild(row);
       });

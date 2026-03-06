@@ -178,7 +178,7 @@
             <div class="flex items-center justify-center gap-2">
               <button
                 type="button"
-                class="px-3 py-1.5 rounded-lg text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 transition-colors flex items-center justify-center font-bold text-xs"
+                class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 data-action="edit"
                 data-product-id="${escapeHtml(row.product_id)}"
                 ${isDisabled}
@@ -187,7 +187,7 @@
               </button>
               <button
                 type="button"
-                class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition-colors flex items-center justify-center font-bold text-xs border border-transparent hover:border-slate-200"
+                class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
                 data-action="detail"
                 data-product-id="${escapeHtml(row.product_id)}"
                 ${isDisabled}
@@ -384,7 +384,7 @@
                               <div class="flex items-center justify-center gap-1">
                                 <button
                                   type="button"
-                                  class="w-8 h-8 flex items-center justify-center rounded-lg text-blue-500 hover:text-blue-700 hover:bg-blue-50 transition-colors focus:outline-none"
+                                  class="w-8 h-8 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600 hover:text-amber-700 hover:bg-amber-100 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500"
                                   data-batch-action="edit"
                                   data-batch-id="${escapeHtml(batch.id)}"
                                   title="Edit batch"
@@ -393,7 +393,7 @@
                                 </button>
                                 <button
                                   type="button"
-                                  class="w-8 h-8 flex items-center justify-center rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors focus:outline-none"
+                                  class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:text-red-700 hover:bg-red-100 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
                                   data-batch-action="delete"
                                   data-batch-id="${escapeHtml(batch.id)}"
                                   title="Hapus batch"

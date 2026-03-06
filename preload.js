@@ -8,14 +8,10 @@ contextBridge.exposeInMainWorld("api", {
 
   getEcerProducts: () => ipcRenderer.invoke("get-ecer-products"),
 
-  saveTransaction: (data) => ipcRenderer.invoke("save-transaction", data),
-
   printReceipt: (transactionId) =>
     ipcRenderer.invoke("print-receipt", transactionId),
 
   getReportByDate: (date) => ipcRenderer.invoke("get-report-by-date", date),
-
-  openReport: () => ipcRenderer.invoke("open-report"),
 
   checkStock: (productId) => ipcRenderer.invoke("check-stock", productId),
 

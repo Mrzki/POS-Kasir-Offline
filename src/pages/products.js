@@ -146,7 +146,9 @@
             : "bg-slate-100 text-slate-600 border border-slate-200";
         const statusLabel = product.is_active ? "Aktif" : "Nonaktif";
         const toggleLabel = product.is_active ? "Nonaktifkan" : "Aktifkan";
-        const toggleClass = product.is_active ? "text-red-500 hover:text-red-700 hover:bg-red-50" : "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50";
+        const toggleClass = product.is_active 
+            ? "bg-red-50 text-red-700 hover:bg-red-100 focus:ring-red-500" 
+            : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 focus:ring-emerald-500";
 
         tr.innerHTML = `
           <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-mono">${escapeHtml(product.no_sku || "-")}</td>
@@ -158,8 +160,8 @@
           <td class="px-6 py-4 whitespace-nowrap"><span class="px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider ${statusClass}">${statusLabel}</span></td>
           <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
             <div class="flex items-center justify-end gap-2">
-              <button type="button" data-edit="${escapeHtml(product.id)}" class="px-3 py-1.5 rounded-lg text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-colors flex items-center justify-center font-bold">Edit</button>
-              <button type="button" data-toggle="${escapeHtml(product.id)}" class="px-3 py-1.5 rounded-lg transition-colors flex items-center justify-center font-bold ${toggleClass}">
+              <button type="button" data-edit="${escapeHtml(product.id)}" class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500">Edit</button>
+              <button type="button" data-toggle="${escapeHtml(product.id)}" class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors focus:outline-none focus:ring-2 ${toggleClass}">
                 ${toggleLabel}
               </button>
             </div>

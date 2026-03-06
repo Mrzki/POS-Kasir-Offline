@@ -197,10 +197,10 @@
           </td>
           <td class="py-3 px-4 border-b border-slate-100 text-sm">
             <div class="flex gap-2">
-              <button type="button" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500" data-action="detail" data-id="${escapeHtml(tx.id)}">Detail</button>
+              <button type="button" class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500" data-action="detail" data-id="${escapeHtml(tx.id)}">Detail</button>
               ${
                 !isVoided
-                  ? `<button type="button" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500" data-action="void" data-id="${escapeHtml(tx.id)}">Cancel</button>`
+                  ? `<button type="button" class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500" data-action="void" data-id="${escapeHtml(tx.id)}">Cancel</button>`
                   : ""
               }
             </div>

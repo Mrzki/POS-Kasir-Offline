@@ -78,20 +78,9 @@ ipcMain.handle("navigate", (event, target) => {
       createWindow();
       break;
 
-    case "products":
-      openProductsWindow();
-      break;
-
-    case "stocks":
-      openStockWindow();
-      break;
-
-    case "transactions":
-      openTransactionReportWindow();
-      break;
-
-    case "sales":
-      openSalesReportWindow();
+    default:
+      // All other pages (products, stocks, transactions, sales)
+      // are handled by the SPA router in renderer.js
       break;
   }
 });
@@ -138,22 +127,18 @@ ipcMain.handle("print-receipt", async (event, transactionId) => {
 });
 
 ipcMain.handle("get-report-by-date", (event, date) => {
-  return new Promise((resolve, reject) => {
-    db.get(
+  return db
+    .prepare(
       `
       SELECT 
         COUNT(id) AS total_transactions,
-        SUM(total) AS total_income
+        COALESCE(SUM(total_amount), 0) AS total_income
       FROM transactions
       WHERE substr(datetime(created_at, '+7 hours'), 1, 10) = ?
+        AND type = 'sale'
       `,
-      [date],
-      (err, row) => {
-        if (err) reject(err);
-        else resolve(row);
-      },
-    );
-  });
+    )
+    .get(date);
 });
 
 ipcMain.handle("check-stock", (event, productId) => {
@@ -382,10 +367,7 @@ ipcMain.handle("stock:delete-batch", (event, batchId) => {
   return stockService.deleteStockBatch(batchId);
 });
 
-ipcMain.handle("open-report", () => {
-  openReportWindow();
-  return true;
-});
+// open-report handler removed — reports are handled via SPA router
 
 // Transaction IPC
     ipcMain.handle("get-transactions", (event, range = {}) => {
@@ -649,12 +631,13 @@ function openDashboardWindow() {
   const win = new BrowserWindow({
     width: 1000,
     height: 700,
+    icon: path.join(__dirname, "build", "icon.ico"),
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
     },
   });
 
-  win.loadFile("src/dashboard.html");
+  win.loadFile("src/index.html");
 }
 
 app.whenReady().then(() => {

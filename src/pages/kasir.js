@@ -1271,6 +1271,29 @@
           return;
         }
 
+        // F12 shortcut — Proses (INPUT) / Bayar (PAYMENT)
+        if (event.key === "F12" && !event.repeat && !isAnyModalActive()) {
+          event.preventDefault();
+
+          if (state.mode === "INPUT") {
+            handleProcessInput().catch((error) => {
+              if (!signal.aborted) {
+                showWarning(error?.message || "Gagal proses transaksi.");
+              }
+            });
+            return;
+          }
+
+          if (state.mode === "PAYMENT" && !state.isPaying) {
+            handlePay().catch((error) => {
+              if (!signal.aborted) {
+                showWarning(error?.message || "Transaksi gagal diproses.");
+              }
+            });
+          }
+          return;
+        }
+
         if (event.key !== "Enter" || event.repeat || isAnyModalActive()) {
           return;
         }

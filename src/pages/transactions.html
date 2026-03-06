@@ -38,7 +38,7 @@
         </div>
         <input type="search" id="transaction-search" placeholder="Cari nomor transaksi..." autocomplete="off" class="w-full pl-10 pr-4 h-[38px] py-2 bg-white border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all placeholder:font-medium placeholder:text-slate-400" />
       </div>
-      <span id="transaction-search-count" class="hidden text-xs text-slate-500 font-medium w-full text-right mt-1"></span>
+      <span id="transaction-search-count" class="text-xs text-slate-500 font-medium w-full text-right mt-1"></span>
     </div>
   </div>
 
@@ -83,13 +83,13 @@
   <div id="void-modal" class="modal">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-md m-4 overflow-hidden transform transition-all">
       <div class="p-6 pb-4">
-          <h3 class="text-lg font-bold text-slate-800 mb-2">Void Transaksi</h3>
+          <h3 class="text-lg font-bold text-slate-800 mb-2">Cancel Transaksi</h3>
           <p id="void-info" class="text-sm text-slate-600"></p>
       </div>
 
       <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
         <button id="cancel-void" type="button" class="px-4 py-2 text-sm font-semibold rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-200">Batal</button>
-        <button id="confirm-void" type="button" class="px-4 py-2 text-sm font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 shadow-sm">Ya, Void</button>
+        <button id="confirm-void" type="button" class="px-4 py-2 text-sm font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 shadow-sm">Ya, Cancel</button>
       </div>
     </div>
   </div>

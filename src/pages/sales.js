@@ -292,7 +292,7 @@
           <td class="py-3 px-4 border-b border-slate-100 text-center">
             <button
               type="button"
-              class="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400"
+              class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
               data-action="detail"
               data-product-id="${escapeHtml(row.product_id)}"
             >

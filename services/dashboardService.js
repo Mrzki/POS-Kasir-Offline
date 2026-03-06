@@ -1,5 +1,30 @@
 const db = require("../database/db");
 
+// Detect is_voided column availability for backward compatibility
+const transactionsTableColumns = db.prepare("PRAGMA table_info(transactions)").all();
+const hasIsVoidedColumn = transactionsTableColumns.some(
+  (column) => column.name === "is_voided",
+);
+
+function getNonVoidedCondition(alias = "t") {
+  const clauses = [
+    `NOT EXISTS (
+      SELECT 1
+      FROM transactions v
+      WHERE v.type = 'void'
+        AND v.reference_transaction_id = ${alias}.id
+    )`,
+  ];
+
+  if (hasIsVoidedColumn) {
+    clauses.push(`COALESCE(${alias}.is_voided, 0) = 0`);
+  }
+
+  return clauses.map((clause) => `AND ${clause}`).join("\n        ");
+}
+
+const nonVoidedCondition = getNonVoidedCondition();
+
 /**
  * Ringkasan dashboard per hari
  * HANYA transaksi sale yang BELUM void
@@ -10,12 +35,12 @@ function getDailySummary(date) {
       `
     SELECT
       COUNT(*) AS total_transactions,
-      COALESCE(SUM(total_amount), 0) AS total_revenue,
-      COALESCE(SUM(total_profit), 0) AS total_profit
-    FROM transactions
-    WHERE substr(datetime(created_at, '+7 hours'), 1, 10) = DATE(?)
-      AND type = 'sale'
-      AND is_voided = 0
+      COALESCE(SUM(t.total_amount), 0) AS total_revenue,
+      COALESCE(SUM(t.total_profit), 0) AS total_profit
+    FROM transactions t
+    WHERE substr(datetime(t.created_at, '+7 hours'), 1, 10) = DATE(?)
+      AND t.type = 'sale'
+      ${nonVoidedCondition}
   `,
     )
     .get(date);
@@ -36,14 +61,14 @@ function getHourlyAnalytics(date) {
     .prepare(
       `
     SELECT
-      CAST(strftime('%H', datetime(created_at, '+7 hours')) AS INTEGER) AS hour,
+      CAST(strftime('%H', datetime(t.created_at, '+7 hours')) AS INTEGER) AS hour,
       COUNT(*) AS total_transactions,
-      COALESCE(SUM(total_amount), 0) AS revenue,
-      COALESCE(SUM(total_profit), 0) AS profit
-    FROM transactions
-    WHERE substr(datetime(created_at, '+7 hours'), 1, 10) = DATE(?)
-      AND type = 'sale'
-      AND is_voided = 0
+      COALESCE(SUM(t.total_amount), 0) AS revenue,
+      COALESCE(SUM(t.total_profit), 0) AS profit
+    FROM transactions t
+    WHERE substr(datetime(t.created_at, '+7 hours'), 1, 10) = DATE(?)
+      AND t.type = 'sale'
+      ${nonVoidedCondition}
     GROUP BY hour
   `,
     )
@@ -79,7 +104,7 @@ function getTopProducts(date, limit = 5) {
     JOIN products p ON p.id = ti.product_id
     WHERE substr(datetime(t.created_at, '+7 hours'), 1, 10) = DATE(?)
       AND t.type = 'sale'
-      AND t.is_voided = 0
+      ${nonVoidedCondition}
     GROUP BY p.id
     ORDER BY total_qty DESC
     LIMIT ?
