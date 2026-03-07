@@ -8,10 +8,8 @@ const Database = require("better-sqlite3");
  * - Production (packaged): menyalin database ke userData agar writable
  */
 function resolveDbPath() {
-  const isPackaged =
-    typeof process !== "undefined" &&
-    process.type !== "browser" &&
-    require("electron").app?.isPackaged;
+  const { app } = require("electron");
+  const isPackaged = app?.isPackaged ?? false;
 
   if (!isPackaged) {
     // Development — gunakan database langsung dari folder project
@@ -19,7 +17,6 @@ function resolveDbPath() {
   }
 
   // Production — database harus di folder userData agar writable
-  const { app } = require("electron");
   const userDataPath = app.getPath("userData");
   const targetDbPath = path.join(userDataPath, "kasir.db");
 
