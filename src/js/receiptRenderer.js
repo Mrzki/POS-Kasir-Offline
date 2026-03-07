@@ -1,6 +1,6 @@
 (() => {
   const STYLE_ID = "receipt-renderer-style";
-  const LINE_WIDTH = 33; // 58mm thermal paper, sedikit lebih lebar
+  const LINE_WIDTH = 23; // 58mm thermal paper, disesuaikan untuk font 13px
   const DASH = "-";
 
   // ──── Utility ────
@@ -26,7 +26,12 @@
       d = value;
     } else {
       const normalized = String(value).replace(" ", "T");
-      d = new Date(normalized);
+      // Database stores UTC time (via toISOString), append 'Z' so JS
+      // converts to local timezone when displaying hours/minutes.
+      const withTz = /[Z+\-]\d{0,2}:?\d{0,2}$/.test(normalized)
+        ? normalized
+        : normalized + "Z";
+      d = new Date(withTz);
       if (Number.isNaN(d.getTime())) return String(value);
     }
     const dd = String(d.getDate()).padStart(2, "0");
@@ -56,7 +61,7 @@
     return {
       storeName: String(transactionData.storeName ?? "TOKO SANJAYA BAROKAH"),
       storeTagline: String(
-        transactionData.storeTagline ?? "Toko Kelontong & Sembako",
+        transactionData.storeTagline ?? "Toko Kelontong&Sembako",
       ),
       storeAddress: String(
         transactionData.storeAddress ?? "Sanan, Balesono - Tulungagung",
@@ -205,15 +210,15 @@
         width: var(--receipt-width, auto);
         max-width: 100%;
         margin: 0 auto;
-        padding: 5px;
+        padding: 2px;
         background: #fff;
         color: #000;
       }
 
       .receipt-render pre {
         font-family: "Roboto Mono", Consolas, "Courier New", monospace;
-        font-size: 11px;
-        line-height: 1.15;
+        font-size: 13px;
+        line-height: 1.2;
         margin: 0;
         padding: 0;
         white-space: pre;
@@ -244,8 +249,8 @@
         }
 
         .receipt-render pre {
-          font-size: 9px;
-          line-height: 1.15;
+          font-size: 13px;
+          line-height: 1.2;
           margin: 0;
           padding: 0;
         }
@@ -292,7 +297,7 @@
     wrapper.appendChild(spacer);
 
     const feedLines = doc.createElement("pre");
-    feedLines.style.cssText = "margin:0; padding:0; font-size:9px; line-height:1.2; color:#fff; white-space:pre;";
+    feedLines.style.cssText = "margin:0; padding:0; font-size:13px; line-height:1.2; color:#fff; white-space:pre;";
     feedLines.textContent = "\n".repeat(40);
     wrapper.appendChild(feedLines);
 
