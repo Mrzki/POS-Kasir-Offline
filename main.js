@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog } = require("electron");
+const { app, BrowserWindow, dialog, Menu } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const transactionService = require("./services/transactionService");
@@ -549,7 +549,8 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 1000,
     height: 700,
-    icon: path.join(__dirname, "build", "icon.ico"),
+    icon: path.join(__dirname, "build", "icon.png"),
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
     },
@@ -629,7 +630,8 @@ function openDashboardWindow() {
   const win = new BrowserWindow({
     width: 1000,
     height: 700,
-    icon: path.join(__dirname, "build", "icon.ico"),
+    icon: path.join(__dirname, "build", "icon.png"),
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
     },
@@ -639,5 +641,6 @@ function openDashboardWindow() {
 }
 
 app.whenReady().then(() => {
+  Menu.setApplicationMenu(null);
   createWindow();
 });
