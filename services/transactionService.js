@@ -99,8 +99,9 @@ function processSale(cartItems, paymentAmount) {
             selling_price,
             cost_price,
             subtotal,
-            profit
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            profit,
+            name
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
         ).run(
           crypto.randomUUID(),
@@ -112,6 +113,7 @@ function processSale(cartItems, paymentAmount) {
           batch.cost_price,
           subtotal,
           profit,
+          item.name || null,
         );
 
         db.prepare(

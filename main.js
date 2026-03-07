@@ -7,9 +7,6 @@ const dashboardService = require("./services/dashboardService");
 const stockService = require("./services/stockService");
 const importService = require("./services/importService");
 
-// INIT DATABASE
-require("./database/db");
-
 const { ipcMain } = require("electron");
 const db = require("./database/db");
 const transactionsTableColumns = db.prepare("PRAGMA table_info(transactions)").all();
@@ -131,11 +128,12 @@ ipcMain.handle("get-report-by-date", (event, date) => {
     .prepare(
       `
       SELECT 
-        COUNT(id) AS total_transactions,
-        COALESCE(SUM(total_amount), 0) AS total_income
-      FROM transactions
-      WHERE substr(datetime(created_at, '+7 hours'), 1, 10) = ?
-        AND type = 'sale'
+        COUNT(t.id) AS total_transactions,
+        COALESCE(SUM(t.total_amount), 0) AS total_income
+      FROM transactions t
+      WHERE substr(datetime(t.created_at, '+7 hours'), 1, 10) = ?
+        AND t.type = 'sale'
+        ${nonVoidedSaleCondition}
       `,
     )
     .get(date);

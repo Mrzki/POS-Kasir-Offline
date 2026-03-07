@@ -1,22 +1,55 @@
 {
   "name": "kasir-toko",
   "version": "1.0.0",
-  "description": "",
+  "description": "Aplikasi POS Kasir Offline — Sanjaya Barokah",
   "main": "main.js",
   "scripts": {
     "build:css": "npx @tailwindcss/cli -i ./src/css/input.css -o ./src/css/output.css --minify",
     "dev:css": "npx @tailwindcss/cli -i ./src/css/input.css -o ./src/css/output.css --watch",
     "start": "npm run build:css && electron .",
+    "dist": "npm run build:css && electron-builder --win",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
+  "author": "Sanjaya Barokah",
   "license": "ISC",
   "type": "commonjs",
+  "build": {
+    "appId": "com.sanjayabarokah.kasir",
+    "productName": "POS Kasir Sanjaya Barokah",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "build/icon.png",
+      "uninstallerIcon": "build/icon.png"
+    },
+    "extraResources": [
+      {
+        "from": "database/kasir.db",
+        "to": "database/kasir.db"
+      }
+    ],
+    "files": [
+      "main.js",
+      "preload.js",
+      "services/**/*",
+      "database/db.js",
+      "src/**/*",
+      "!src/css/input.css"
+    ]
+  },
   "devDependencies": {
     "@electron/rebuild": "^4.0.3",
     "@tailwindcss/cli": "^4.2.0",
     "electron": "^40.1.0",
+    "electron-builder": "^26.8.1",
     "tailwindcss": "^4.2.0"
   },
   "dependencies": {

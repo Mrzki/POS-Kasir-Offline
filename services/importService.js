@@ -123,7 +123,7 @@ async function generateTemplate() {
   }
 
   // 6. Data Validation — Dropdown Satuan (kolom E, baris 3 - 1000)
-  const satuanList = ["pcs", "kg", "gr", "liter", "pack"];
+  const satuanList = ["pcs", "kg", "gr", "liter", "pack", "dus"];
   for (let row = 3; row <= 1000; row++) {
     sheet.getCell(`E${row}`).dataValidation = {
       type: "list",
@@ -752,7 +752,7 @@ async function exportProductsExcel() {
     }
   }
 
-  const satuanList = ["pcs", "kg", "gr", "liter", "pack"];
+  const satuanList = ["pcs", "kg", "gr", "liter", "pack", "dus"];
   for (let r = 3; r <= lastDataRow; r++) {
     sheet.getCell(`E${r}`).dataValidation = {
       type: "list",

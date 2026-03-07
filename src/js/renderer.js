@@ -116,10 +116,19 @@ function cleanupCurrentPage() {
   }
 }
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 function renderPlaceholder(page) {
   appContainer.innerHTML = `
     <div class="page-placeholder">
-      <h2>Halaman "${page}" belum tersedia</h2>
+      <h2>Halaman "${escapeHtml(page)}" belum tersedia</h2>
       <p>Fitur ini belum dibuat di build saat ini.</p>
     </div>
   `;
@@ -128,7 +137,7 @@ function renderPlaceholder(page) {
 function renderPageError(page) {
   appContainer.innerHTML = `
     <div class="page-error">
-      <h2>Gagal memuat halaman "${page}"</h2>
+      <h2>Gagal memuat halaman "${escapeHtml(page)}"</h2>
       <p>Periksa console untuk detail error.</p>
     </div>
   `;
