@@ -12,6 +12,7 @@
     const cancelToggleBtn = document.getElementById("cancel-product-toggle");
 
     const nameInput = document.getElementById("product-name");
+    const nameStrukInput = document.getElementById("product-name-struk");
     const barcodeInput = document.getElementById("product-barcode");
     const categorySelect = document.getElementById("product-category");
     const priceInput = document.getElementById("product-price");
@@ -34,6 +35,7 @@
       !confirmToggleBtn ||
       !cancelToggleBtn ||
       !nameInput ||
+      !nameStrukInput ||
       !barcodeInput ||
       !categorySelect ||
       !priceInput ||
@@ -152,7 +154,10 @@
 
         tr.innerHTML = `
           <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-mono">${escapeHtml(product.no_sku || "-")}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-800">${escapeHtml(product.name)}</td>
+          <td class="px-6 py-4">
+            <div class="font-bold text-slate-800 text-sm">${escapeHtml(product.name)}</div>
+            <div class="text-xs text-slate-500 mt-0.5">${escapeHtml(product.name_struk || product.name)}</div>
+          </td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-mono">${escapeHtml(product.barcode || "-")}</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600"><span class="px-2 py-1 bg-slate-100 rounded-md text-xs font-semibold">${escapeHtml(product.category_name || "-")}</span></td>
           <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-700">${formatRupiah(product.selling_price)}</td>
@@ -179,6 +184,7 @@
 
     function resetForm() {
       nameInput.value = "";
+      nameStrukInput.value = "";
       barcodeInput.value = "";
       categorySelect.value = "";
       priceInput.value = "";
@@ -196,6 +202,7 @@
         state.editingId = product.id;
 
         nameInput.value = product.name || "";
+        nameStrukInput.value = product.name_struk || "";
         barcodeInput.value = product.barcode || "";
         categorySelect.value = product.category_id || "";
         priceInput.value = product.selling_price || "";
@@ -274,6 +281,7 @@
       const sellingPrice = Number(priceInput.value);
       const payload = {
         name: nameInput.value.trim(),
+        name_struk: nameStrukInput.value.trim() || null,
         barcode: barcodeInput.value.trim() || null,
         category_id: categorySelect.value || null,
         selling_price: sellingPrice,
@@ -316,7 +324,8 @@
         await loadProducts();
       } catch (error) {
         if (!signal.aborted) {
-          showMessage("error", error.message, true);
+          const msg = (error.message || "Gagal menyimpan barang.").replace(/^Error invoking remote method '[^']+': Error: /i, "");
+          showMessage("error", msg);
         }
       } finally {
         if (!signal.aborted) {
@@ -492,8 +501,7 @@
                   if (!signal.aborted) {
                     showMessage(
                       "error",
-                      `${result.errors.length} baris bermasalah. Cek console untuk detail.`,
-                      true,
+                      result.errors.join(" | "),
                     );
                   }
                 }, 3000);

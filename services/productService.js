@@ -88,34 +88,41 @@ function createProduct(data) {
   const id = crypto.randomUUID();
   const sku = no_sku || generateSKU();
 
-  db.prepare(
-    `
-    INSERT INTO products (
+  try {
+    db.prepare(
+      `
+      INSERT INTO products (
+        id,
+        no_sku,
+        barcode,
+        name,
+        name_struk,
+        category_id,
+        selling_price,
+        unit,
+        min_stock,
+        is_non_barcode,
+        is_active
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+    `,
+    ).run(
       id,
-      no_sku,
-      barcode,
+      sku,
+      barcode || null,
       name,
-      name_struk,
-      category_id,
+      name_struk || name,
+      category_id || null,
       selling_price,
       unit,
-      min_stock,
-      is_non_barcode,
-      is_active
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
-  `,
-  ).run(
-    id,
-    sku,
-    barcode || null,
-    name,
-    name_struk || name,
-    category_id || null,
-    selling_price,
-    unit,
-    min_stock ?? 5,
-    is_non_barcode ? 1 : 0,
-  );
+      min_stock ?? 5,
+      is_non_barcode ? 1 : 0,
+    );
+  } catch (err) {
+    if (err.code === "SQLITE_CONSTRAINT_UNIQUE" && barcode) {
+      throw new Error(`Barcode "${barcode}" sudah digunakan oleh barang lain.`);
+    }
+    throw err;
+  }
 
   return { id };
 }
@@ -126,32 +133,39 @@ function createProduct(data) {
 function updateProduct(id, data) {
   const { barcode, name, name_struk, category_id, selling_price, unit, min_stock, is_non_barcode } = data;
 
-  db.prepare(
-    `
-    UPDATE products
-    SET
-      barcode = ?,
-      name = ?,
-      name_struk = ?,
-      category_id = ?,
-      selling_price = ?,
-      unit = ?,
-      min_stock = ?,
-      is_non_barcode = ?,
-      updated_at = CURRENT_TIMESTAMP
-    WHERE id = ?
-  `,
-  ).run(
-    barcode || null,
-    name,
-    name_struk || name,
-    category_id || null,
-    selling_price,
-    unit,
-    min_stock ?? 5,
-    is_non_barcode ? 1 : 0,
-    id,
-  );
+  try {
+    db.prepare(
+      `
+      UPDATE products
+      SET
+        barcode = ?,
+        name = ?,
+        name_struk = ?,
+        category_id = ?,
+        selling_price = ?,
+        unit = ?,
+        min_stock = ?,
+        is_non_barcode = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `,
+    ).run(
+      barcode || null,
+      name,
+      name_struk || name,
+      category_id || null,
+      selling_price,
+      unit,
+      min_stock ?? 5,
+      is_non_barcode ? 1 : 0,
+      id,
+    );
+  } catch (err) {
+    if (err.code === "SQLITE_CONSTRAINT_UNIQUE" && barcode) {
+      throw new Error(`Barcode "${barcode}" sudah digunakan oleh barang lain.`);
+    }
+    throw err;
+  }
 
   return true;
 }

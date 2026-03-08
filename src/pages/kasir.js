@@ -278,7 +278,7 @@
         transactionNumber: "PREVIEW",
         transactionDate: new Date(),
         items: state.cart.map((item) => ({
-          name: item.name,
+          name: item.name_struk || item.name,
           quantity: item.qty,
           selling_price: item.price,
           subtotal: item.subtotal,
@@ -551,6 +551,7 @@
         state.cart.push({
           product_id: product.id,
           name: product.name,
+          name_struk: product.name_struk || product.name,
           price: Number(product.selling_price),
           qty: 1,
           subtotal: Number(product.selling_price),
@@ -735,7 +736,7 @@
             quantity: item.qty,
             selling_price: item.price,
             is_non_barcode: item.is_non_barcode || false,
-            name: item.name,
+            name: item.name_struk || item.name,
           })),
           paymentAmount,
         });
@@ -1148,6 +1149,7 @@
         state.cart.push({
           product_id: product.id,
           name: product.name,
+          name_struk: product.name_struk || product.name,
           price: price,
           qty: qty,
           subtotal: qty * price,

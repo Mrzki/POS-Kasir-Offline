@@ -321,7 +321,11 @@ async function importProducts(filePath) {
           }
         }
       } catch (err) {
-        errors.push(`Baris ${rowNum}: ${err.message}`);
+        if (err.code === "SQLITE_CONSTRAINT_UNIQUE" && barcode) {
+          errors.push(`Baris ${rowNum}: Barcode "${barcode}" sudah digunakan oleh barang lain.`);
+        } else {
+          errors.push(`Baris ${rowNum}: ${err.message}`);
+        }
       }
     }
   });
@@ -652,6 +656,7 @@ async function exportProductsExcel() {
       SELECT
         p.no_sku,
         p.name,
+        p.name_struk,
         c.name AS category_name,
         p.selling_price,
         p.unit,
