@@ -73,7 +73,7 @@ function processSale(cartItems, paymentAmount) {
         FROM stock_batches
         WHERE product_id = ?
           AND quantity_remaining > 0
-        ORDER BY created_at ASC
+        ORDER BY stock_date ASC, created_at ASC, id ASC
       `,
         )
         .all(item.product_id);
@@ -194,7 +194,9 @@ function voidTransaction(originalTransactionId) {
 
   const transaction = db.transaction(() => {
     const now = new Date().toISOString().slice(0, 19).replace("T", " ");
-    const today = now.slice(0, 10);
+    // Gunakan waktu WIB (UTC+7) agar konsisten dengan query lain
+    const nowWIB = new Date(Date.now() + 7 * 60 * 60 * 1000);
+    const today = nowWIB.toISOString().slice(0, 10);
 
     const originalTransaction = db
       .prepare(
@@ -213,7 +215,12 @@ function voidTransaction(originalTransactionId) {
       throw new Error("Hanya transaksi sale yang dapat di-void");
     }
 
-    if (String(originalTransaction.created_at || "").slice(0, 10) !== today) {
+    // Konversi created_at ke WIB untuk perbandingan yang konsisten
+    const createdAtStr = String(originalTransaction.created_at || "");
+    const createdDate = new Date(createdAtStr.replace(" ", "T") + "Z");
+    const createdWIB = new Date(createdDate.getTime() + 7 * 60 * 60 * 1000);
+    const createdDateWIB = createdWIB.toISOString().slice(0, 10);
+    if (createdDateWIB !== today) {
       throw new Error("Void hanya bisa untuk transaksi hari ini");
     }
 

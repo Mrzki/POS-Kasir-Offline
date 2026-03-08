@@ -511,10 +511,10 @@
       const batch = getBatchById(batchId);
       if (!batch) return;
 
-      const panel = sidebarContent.querySelector("#batch-delete-confirm");
-      const editPanel = sidebarContent.querySelector("#batch-edit-panel");
+      const panel = modalContent.querySelector("#batch-delete-confirm");
+      const editPanel = modalContent.querySelector("#batch-edit-panel");
       if (!panel) return;
-      if (editPanel) editPanel.hidden = true;
+      if (editPanel) editPanel.classList.add("hidden");
 
       const usedQty = Number(batch.quantity_initial) - Number(batch.quantity_remaining);
 
@@ -528,39 +528,54 @@
       }
 
       panel.innerHTML = `
-        <div class="batch-confirm-card">
-          <p class="batch-confirm-text">
-            Yakin ingin menghapus batch ini?
-          </p>
-          <p class="stock-hint">
-            Tanggal: <strong>${escapeHtml(formatDate(batch.stock_date))}</strong>,
-            Qty: <strong>${formatQty(batch.quantity_initial)}</strong>,
-            Harga: <strong>${formatRupiah(batch.cost_price)}</strong>
-          </p>
-          <div class="batch-edit-actions">
+        <div class="p-5 border border-red-200 bg-red-50/50 rounded-xl flex flex-col gap-4 mt-2 shadow-sm">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 flex items-center justify-center rounded-full bg-red-100 text-red-600 shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+            </div>
+            <div>
+              <h4 class="font-bold text-red-800">Hapus Batch Stok</h4>
+              <p class="text-sm text-red-600/80 mt-1">Yakin ingin menghapus batch ini? Tindakan ini tidak bisa dibatalkan.</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-3 p-3 bg-white/80 rounded-lg border border-red-100">
+            <div class="flex flex-col gap-0.5">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tanggal</span>
+              <span class="text-sm font-bold text-slate-800">${escapeHtml(formatDate(batch.stock_date))}</span>
+            </div>
+            <div class="flex flex-col gap-0.5">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Qty Awal</span>
+              <span class="text-sm font-bold text-slate-800">${formatQty(batch.quantity_initial)}</span>
+            </div>
+            <div class="flex flex-col gap-0.5">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Harga Modal</span>
+              <span class="text-sm font-bold text-slate-800">${formatRupiah(batch.cost_price)}</span>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
             <button
               type="button"
-              class="stock-submit stock-submit-remove"
+              class="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 ring-offset-2"
               data-batch-confirm="yes"
               data-batch-id="${escapeHtml(batchId)}"
             >Ya, Hapus</button>
             <button
               type="button"
-              class="stock-btn stock-btn-detail"
+              class="px-4 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-bold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-slate-200"
               data-batch-confirm="no"
             >Batal</button>
           </div>
         </div>
       `;
 
-      panel.hidden = false;
+      panel.classList.remove("hidden");
       panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
 
     function hideBatchDeleteConfirm() {
-      const panel = sidebarContent.querySelector("#batch-delete-confirm");
+      const panel = modalContent.querySelector("#batch-delete-confirm");
       if (panel) {
-        panel.hidden = true;
+        panel.classList.add("hidden");
         panel.innerHTML = "";
       }
     }

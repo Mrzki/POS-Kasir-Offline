@@ -54,7 +54,7 @@ async function generateTemplate() {
   const sheet = workbook.addWorksheet("Template Import Barang");
 
   // 3. Baris 1 — Keterangan
-  sheet.mergeCells("A1:H1");
+  sheet.mergeCells("A1:I1");
   const infoCell = sheet.getCell("A1");
   infoCell.value =
     '📌 Kosongkan kolom "No SKU" jika ini barang baru (akan di-generate otomatis). Isi No SKU jika ingin update data barang yang sudah ada. Kolom "Barcode" dan "Min Stok" bersifat opsional. Isi kolom "Tanpa Barcode" dengan Ya/Tidak.';
@@ -678,7 +678,7 @@ async function exportProductsExcel() {
   const sheet = workbook.addWorksheet("Data Barang");
 
   // Baris 1 — Keterangan (sama persis dengan template import)
-  sheet.mergeCells("A1:H1");
+  sheet.mergeCells("A1:I1");
   const infoCell = sheet.getCell("A1");
   infoCell.value =
     '📌 Kosongkan kolom "No SKU" jika ini barang baru (akan di-generate otomatis). Isi No SKU jika ingin update data barang yang sudah ada. Kolom "Barcode" dan "Min Stok" bersifat opsional. Isi kolom "Tanpa Barcode" dengan Ya/Tidak.';
