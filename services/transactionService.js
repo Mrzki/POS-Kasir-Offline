@@ -171,7 +171,7 @@ function getTransactionDetail(transactionId) {
       `
       SELECT 
         ti.*,
-        COALESCE(p.name, ti.name, 'Item Manual') AS name
+        COALESCE(p.name_struk, p.name, ti.name, 'Item Manual') AS name
       FROM transaction_items ti
       LEFT JOIN products p ON p.id = ti.product_id
       WHERE ti.transaction_id = ?

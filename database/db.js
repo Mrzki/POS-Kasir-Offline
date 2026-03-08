@@ -108,4 +108,14 @@ try {
   // Column already exists — ignore
 }
 
+// Migration: add name_struk column to products
+try {
+  db.prepare("ALTER TABLE products ADD COLUMN name_struk TEXT").run();
+  // Backfill: set name_struk = name for existing products
+  db.prepare("UPDATE products SET name_struk = name WHERE name_struk IS NULL").run();
+  console.log("Migration: name_struk column added to products");
+} catch (_err) {
+  // Column already exists — ignore
+}
+
 module.exports = db;

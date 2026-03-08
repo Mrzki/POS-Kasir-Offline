@@ -30,10 +30,11 @@ function searchProducts(keyword) {
       WHERE p.name LIKE ?
          OR p.barcode LIKE ?
          OR p.no_sku LIKE ?
+         OR p.name_struk LIKE ?
       ORDER BY p.created_at DESC
     `,
     )
-    .all(`%${keyword}%`, `%${keyword}%`, `%${keyword}%`);
+    .all(`%${keyword}%`, `%${keyword}%`, `%${keyword}%`, `%${keyword}%`);
 }
 
 /* ===============================
@@ -82,7 +83,7 @@ function generateSKU() {
    CREATE PRODUCT
 ================================= */
 function createProduct(data) {
-  const { no_sku, barcode, name, category_id, selling_price, unit, min_stock, is_non_barcode } = data;
+  const { no_sku, barcode, name, name_struk, category_id, selling_price, unit, min_stock, is_non_barcode } = data;
 
   const id = crypto.randomUUID();
   const sku = no_sku || generateSKU();
@@ -94,19 +95,21 @@ function createProduct(data) {
       no_sku,
       barcode,
       name,
+      name_struk,
       category_id,
       selling_price,
       unit,
       min_stock,
       is_non_barcode,
       is_active
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
   `,
   ).run(
     id,
     sku,
     barcode || null,
     name,
+    name_struk || name,
     category_id || null,
     selling_price,
     unit,
@@ -121,7 +124,7 @@ function createProduct(data) {
    UPDATE PRODUCT
 ================================= */
 function updateProduct(id, data) {
-  const { barcode, name, category_id, selling_price, unit, min_stock, is_non_barcode } = data;
+  const { barcode, name, name_struk, category_id, selling_price, unit, min_stock, is_non_barcode } = data;
 
   db.prepare(
     `
@@ -129,6 +132,7 @@ function updateProduct(id, data) {
     SET
       barcode = ?,
       name = ?,
+      name_struk = ?,
       category_id = ?,
       selling_price = ?,
       unit = ?,
@@ -140,6 +144,7 @@ function updateProduct(id, data) {
   ).run(
     barcode || null,
     name,
+    name_struk || name,
     category_id || null,
     selling_price,
     unit,

@@ -78,6 +78,7 @@ async function generateTemplate() {
   const headers = [
     { header: "No SKU", key: "no_sku", width: 18 },
     { header: "Nama Barang", key: "name", width: 30 },
+    { header: "Nama Struk", key: "name_struk", width: 25 },
     { header: "Kategori", key: "category", width: 20 },
     { header: "Harga Jual", key: "selling_price", width: 15 },
     { header: "Satuan", key: "unit", width: 12 },
@@ -106,12 +107,12 @@ async function generateTemplate() {
   });
   headerRow.height = 28;
 
-  // 5. Data Validation — Dropdown Kategori (kolom C, baris 3 - 1000)
+  // 5. Data Validation — Dropdown Kategori (kolom D, baris 3 - 1000)
   if (categoryNames.length > 0) {
     const formulae = [`"${categoryNames.join(",")}"`];
 
     for (let row = 3; row <= 1000; row++) {
-      sheet.getCell(`C${row}`).dataValidation = {
+      sheet.getCell(`D${row}`).dataValidation = {
         type: "list",
         allowBlank: true,
         formulae: formulae,
@@ -122,10 +123,10 @@ async function generateTemplate() {
     }
   }
 
-  // 6. Data Validation — Dropdown Satuan (kolom E, baris 3 - 1000)
+  // 6. Data Validation — Dropdown Satuan (kolom F, baris 3 - 1000)
   const satuanList = ["pcs", "kg", "gr", "liter", "pack", "dus"];
   for (let row = 3; row <= 1000; row++) {
-    sheet.getCell(`E${row}`).dataValidation = {
+    sheet.getCell(`F${row}`).dataValidation = {
       type: "list",
       allowBlank: true,
       formulae: [`"${satuanList.join(",")}"`],
@@ -135,9 +136,9 @@ async function generateTemplate() {
     };
   }
 
-  // 7. Data Validation — Dropdown Tanpa Barcode (kolom H, baris 3 - 1000)
+  // 7. Data Validation — Dropdown Tanpa Barcode (kolom I, baris 3 - 1000)
   for (let row = 3; row <= 1000; row++) {
-    sheet.getCell(`H${row}`).dataValidation = {
+    sheet.getCell(`I${row}`).dataValidation = {
       type: "list",
       allowBlank: true,
       formulae: ['"Ya,Tidak"'],
@@ -148,8 +149,8 @@ async function generateTemplate() {
   }
 
   // 8. Format kolom numerik
-  sheet.getColumn(4).numFmt = "#,##0"; // Harga Jual
-  sheet.getColumn(7).numFmt = "0";     // Min Stok
+  sheet.getColumn(5).numFmt = "#,##0"; // Harga Jual
+  sheet.getColumn(8).numFmt = "0";     // Min Stok
 
   // 9. Return buffer
   const buffer = await workbook.xlsx.writeBuffer();
@@ -187,14 +188,15 @@ async function importProducts(filePath) {
   // Siapkan prepared statements
   const insertStmt = db.prepare(`
     INSERT INTO products (
-      id, no_sku, barcode, name, category_id, selling_price, unit, min_stock, is_non_barcode, is_active
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+      id, no_sku, barcode, name, name_struk, category_id, selling_price, unit, min_stock, is_non_barcode, is_active
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
   `);
 
   const updateStmt = db.prepare(`
     UPDATE products
     SET
       name = ?,
+      name_struk = ?,
       barcode = ?,
       category_id = ?,
       selling_price = ?,
@@ -210,29 +212,30 @@ async function importProducts(filePath) {
   `);
 
   // Kumpulkan baris data (mulai baris 3, karena baris 1 = keterangan, baris 2 = header)
-  // Kolom: A=No SKU, B=Nama Barang, C=Kategori, D=Harga Jual, E=Satuan, F=Barcode, G=Min Stok, H=Tanpa Barcode
+  // Kolom: A=No SKU, B=Nama Barang, C=Nama Struk, D=Kategori, E=Harga Jual, F=Satuan, G=Barcode, H=Min Stok, I=Tanpa Barcode
   const rows = [];
   sheet.eachRow((row, rowNumber) => {
     if (rowNumber <= 2) return; // Skip keterangan & header
 
     const noSku = row.getCell(1).text?.trim() || "";
     const name = row.getCell(2).text?.trim() || "";
-    const category = row.getCell(3).text?.trim() || "";
-    const sellingPrice = parseInt(row.getCell(4).value, 10) || 0;
-    const unit = row.getCell(5).text?.trim().toLowerCase() || "pcs";
-    const barcode = row.getCell(6).text?.trim() || "";
-    const minStockRaw = row.getCell(7).value;
+    const nameStruk = row.getCell(3).text?.trim() || "";
+    const category = row.getCell(4).text?.trim() || "";
+    const sellingPrice = parseInt(row.getCell(5).value, 10) || 0;
+    const unit = row.getCell(6).text?.trim().toLowerCase() || "pcs";
+    const barcode = row.getCell(7).text?.trim() || "";
+    const minStockRaw = row.getCell(8).value;
     const minStock =
       minStockRaw !== null && minStockRaw !== undefined && minStockRaw !== ""
         ? parseInt(minStockRaw, 10)
         : 5; // Default 5
-    const nonBarcodeText = row.getCell(8).text?.trim().toLowerCase() || "";
+    const nonBarcodeText = row.getCell(9).text?.trim().toLowerCase() || "";
     const isNonBarcode = nonBarcodeText === "ya" ? 1 : 0;
 
     // Skip baris kosong
     if (!name) return;
 
-    rows.push({ noSku, name, category, sellingPrice, unit, barcode, minStock, isNonBarcode });
+    rows.push({ noSku, name, nameStruk, category, sellingPrice, unit, barcode, minStock, isNonBarcode });
   });
 
   if (rows.length === 0) {
@@ -246,7 +249,7 @@ async function importProducts(filePath) {
 
   const runImport = db.transaction(() => {
     for (let i = 0; i < rows.length; i++) {
-      const { noSku, name, category, sellingPrice, unit, barcode, minStock, isNonBarcode } =
+      const { noSku, name, nameStruk, category, sellingPrice, unit, barcode, minStock, isNonBarcode } =
         rows[i];
       const rowNum = i + 3; // nomor baris Excel
 
@@ -273,6 +276,7 @@ async function importProducts(filePath) {
             newSku,
             barcode || null,
             name,
+            nameStruk || name,
             categoryId,
             sellingPrice,
             unit,
@@ -292,6 +296,7 @@ async function importProducts(filePath) {
               noSku,
               barcode || null,
               name,
+              nameStruk || name,
               categoryId,
               sellingPrice,
               unit,
@@ -303,6 +308,7 @@ async function importProducts(filePath) {
             // SKU ditemukan → update
             updateStmt.run(
               name,
+              nameStruk || name,
               barcode || null,
               categoryId,
               sellingPrice,
@@ -691,6 +697,7 @@ async function exportProductsExcel() {
   const headers = [
     { header: "No SKU", width: 18 },
     { header: "Nama Barang", width: 30 },
+    { header: "Nama Struk", width: 25 },
     { header: "Kategori", width: 20 },
     { header: "Harga Jual", width: 15 },
     { header: "Satuan", width: 12 },
@@ -723,12 +730,13 @@ async function exportProductsExcel() {
     const row = sheet.getRow(i + 3);
     row.getCell(1).value = p.no_sku || "";
     row.getCell(2).value = p.name || "";
-    row.getCell(3).value = p.category_name || "";
-    row.getCell(4).value = Number(p.selling_price || 0);
-    row.getCell(5).value = p.unit || "pcs";
-    row.getCell(6).value = p.barcode || "";
-    row.getCell(7).value = p.min_stock != null ? Number(p.min_stock) : 5;
-    row.getCell(8).value = p.is_non_barcode ? "Ya" : "Tidak";
+    row.getCell(3).value = p.name_struk || p.name || "";
+    row.getCell(4).value = p.category_name || "";
+    row.getCell(5).value = Number(p.selling_price || 0);
+    row.getCell(6).value = p.unit || "pcs";
+    row.getCell(7).value = p.barcode || "";
+    row.getCell(8).value = p.min_stock != null ? Number(p.min_stock) : 5;
+    row.getCell(9).value = p.is_non_barcode ? "Ya" : "Tidak";
   });
 
   // Data Validation — Dropdown Kategori, Satuan, Tanpa Barcode (untuk re-import)
@@ -741,7 +749,7 @@ async function exportProductsExcel() {
 
   if (categoryNames.length > 0) {
     for (let r = 3; r <= lastDataRow; r++) {
-      sheet.getCell(`C${r}`).dataValidation = {
+      sheet.getCell(`D${r}`).dataValidation = {
         type: "list",
         allowBlank: true,
         formulae: [`"${categoryNames.join(",")}"`],
@@ -754,7 +762,7 @@ async function exportProductsExcel() {
 
   const satuanList = ["pcs", "kg", "gr", "liter", "pack", "dus"];
   for (let r = 3; r <= lastDataRow; r++) {
-    sheet.getCell(`E${r}`).dataValidation = {
+    sheet.getCell(`F${r}`).dataValidation = {
       type: "list",
       allowBlank: true,
       formulae: [`"${satuanList.join(",")}"`],
@@ -765,7 +773,7 @@ async function exportProductsExcel() {
   }
 
   for (let r = 3; r <= lastDataRow; r++) {
-    sheet.getCell(`H${r}`).dataValidation = {
+    sheet.getCell(`I${r}`).dataValidation = {
       type: "list",
       allowBlank: true,
       formulae: ['"Ya,Tidak"'],
@@ -776,8 +784,8 @@ async function exportProductsExcel() {
   }
 
   // Format kolom numerik
-  sheet.getColumn(4).numFmt = "#,##0"; // Harga Jual
-  sheet.getColumn(7).numFmt = "0";     // Min Stok
+  sheet.getColumn(5).numFmt = "#,##0"; // Harga Jual
+  sheet.getColumn(8).numFmt = "0";     // Min Stok
 
   const buffer = await workbook.xlsx.writeBuffer();
   return Buffer.from(buffer);
