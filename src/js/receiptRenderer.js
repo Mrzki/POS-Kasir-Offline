@@ -75,7 +75,7 @@
       footerLine1: String(transactionData.footerLine1 ?? "Terima Kasih"),
       footerLine2: String(
         transactionData.footerLine2 ??
-          "Barang yang sudah dibeli tidak dapat dikembalikan",
+          "Atas Kunjungan Anda",
       ),
     };
   }
