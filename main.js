@@ -545,11 +545,18 @@ ipcMain.handle("sales:get-product-detail", (event, payload = {}) => {
   };
 });
 
+function resolveIconPath() {
+  if (app.isPackaged) {
+    return path.join(process.resourcesPath, "build", "icon.png");
+  }
+  return path.join(__dirname, "build", "icon.png");
+}
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1000,
     height: 700,
-    icon: path.join(__dirname, "build", "icon.png"),
+    icon: resolveIconPath(),
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
@@ -630,7 +637,7 @@ function openDashboardWindow() {
   const win = new BrowserWindow({
     width: 1000,
     height: 700,
-    icon: path.join(__dirname, "build", "icon.png"),
+    icon: resolveIconPath(),
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),

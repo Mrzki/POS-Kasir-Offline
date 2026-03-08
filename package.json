@@ -34,6 +34,10 @@
       {
         "from": "database/kasir.db",
         "to": "database/kasir.db"
+      },
+      {
+        "from": "build/icon.png",
+        "to": "build/icon.png"
       }
     ],
     "files": [
