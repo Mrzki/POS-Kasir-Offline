@@ -1249,7 +1249,7 @@
     document.addEventListener(
       "keydown",
       (event) => {
-        if (event.ctrlKey && event.key.toLowerCase() === "m" && !event.repeat) {
+        if (event.key === "F8" && !event.repeat) {
           event.preventDefault();
           openManualItemModal();
           return;
@@ -1273,8 +1273,8 @@
           return;
         }
 
-        // F12 shortcut — Proses (INPUT) / Bayar (PAYMENT)
-        if (event.key === "F12" && !event.repeat && !isAnyModalActive()) {
+        // F10 shortcut — Proses (INPUT) / Bayar (PAYMENT)
+        if (event.key === "F10" && !event.repeat && !isAnyModalActive()) {
           event.preventDefault();
 
           if (state.mode === "INPUT") {
