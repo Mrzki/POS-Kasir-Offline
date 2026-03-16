@@ -57,7 +57,6 @@
             <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">Barcode</th>
             <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">Kategori</th>
             <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">Harga</th>
-            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">Satuan</th>
             <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">Status</th>
             <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right whitespace-nowrap">Aksi</th>
           </tr>
@@ -72,7 +71,7 @@
   <!-- MODAL TAMBAH/EDIT -->
   <!-- Gunakan class `.active` di JS untuk memunculkan modal (hapus .hidden) -->
   <div id="product-modal" class="modal">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden transform scale-95 transition-transform duration-200 border border-slate-200 modal-content-custom">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 overflow-hidden transform scale-95 transition-transform duration-200 border border-slate-200 modal-content-custom">
       <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
         <h3 id="modal-title" class="font-bold text-lg text-slate-800 tracking-tight">Tambah Barang</h3>
       </div>
@@ -134,6 +133,20 @@
               </div>
               <span class="text-sm font-semibold text-slate-600 group-hover:text-slate-800 transition-colors">Barang Ecer / Timbang</span>
             </label>
+          </div>
+        </div>
+
+        <!-- DYNAMIC PACKAGES (Kemasan Besar) -->
+        <div class="flex flex-col gap-2 mt-1">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Kemasan Besar <span class="text-slate-400 font-medium normal-case">(Opsional)</span></label>
+            <button type="button" id="btn-add-package" class="flex items-center gap-1 text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              Tambah Kemasan
+            </button>
+          </div>
+          <div id="packages-container" class="flex flex-col gap-2">
+            <!-- Rows kemasan diisi via JS -->
           </div>
         </div>
       </div>

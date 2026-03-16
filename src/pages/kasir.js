@@ -168,8 +168,81 @@
       warningEl.textContent = "";
     }
 
+    /**
+     * Kalkulasi harga berdasarkan kelipatan kemasan (Bundle Pricing).
+     *
+     * Logika:
+     * 1. Urutkan kemasan dari conversion_qty TERBESAR ke TERKECIL.
+     * 2. Untuk setiap kemasan, hitung berapa kali qty bisa dibagi (DIV).
+     * 3. Sisa qty (MOD) diteruskan ke kemasan berikutnya.
+     * 4. Sisa akhir dikalikan harga satuan dasar.
+     *
+     * @param {number} qty - Jumlah item yang dibeli
+     * @param {number} unitPrice - Harga per satuan dasar
+     * @param {Array} packages - Array kemasan [{package_name, conversion_qty, price}]
+     * @param {string} unitName - Nama satuan dasar (misal: 'Botol')
+     * @returns {{ total: number, breakdown: string }}
+     */
+    function calculateBundlePrice(qty, unitPrice, packages, unitName) {
+      const safeQty = Math.max(0, Math.trunc(qty));
+      const safeUnitPrice = Number(unitPrice) || 0;
+
+      // Jika tidak ada kemasan, gunakan harga satuan biasa
+      if (!Array.isArray(packages) || packages.length === 0) {
+        return {
+          total: safeQty * safeUnitPrice,
+          breakdown: "",
+        };
+      }
+
+      // Urutkan kemasan dari conversion_qty terbesar ke terkecil
+      const sortedPackages = [...packages].sort(
+        (a, b) => Number(b.conversion_qty) - Number(a.conversion_qty),
+      );
+
+      let sisaQty = safeQty;
+      let totalPrice = 0;
+      let usedPackage = false;
+      const parts = [];
+
+      for (const pkg of sortedPackages) {
+        const convQty = Number(pkg.conversion_qty) || 0;
+        const pkgPrice = Number(pkg.price) || 0;
+        if (convQty <= 0 || pkgPrice <= 0) continue;
+
+        // Pembagian bulat (DIV): berapa kemasan yang bisa dipenuhi
+        const bundleCount = Math.floor(sisaQty / convQty);
+        if (bundleCount > 0) {
+          usedPackage = true;
+          totalPrice += bundleCount * pkgPrice;
+          parts.push(`${bundleCount} ${pkg.package_name}`);
+          // Sisa bagi (MOD): qty yang belum terpakai
+          sisaQty = sisaQty % convQty;
+        }
+      }
+
+      // Sisa qty terakhir dikalikan harga satuan dasar
+      if (sisaQty > 0) {
+        totalPrice += sisaQty * safeUnitPrice;
+        parts.push(`${sisaQty} ${unitName || "pcs"}`);
+      }
+
+      return {
+        total: totalPrice,
+        // Tampilkan breakdown jika ada setidaknya 1 kemasan yang terpakai
+        breakdown: usedPackage ? parts.join(" + ") : "",
+      };
+    }
+
     function updateSubtotal(item) {
-      item.subtotal = Number(item.qty) * Number(item.price);
+      const result = calculateBundlePrice(
+        item.qty,
+        item.price,
+        item.packages,
+        item.unit,
+      );
+      item.subtotal = result.total;
+      item.breakdown = result.breakdown;
     }
 
     function updateTotal() {
@@ -321,8 +394,14 @@
           const nonbcBadge = item.is_non_barcode
             ? `<span class="ml-2 px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">Non-Barcode</span>`
             : "";
+          // Tampilkan breakdown kemasan jika ada
+          const breakdownHtml = item.breakdown
+            ? `<div class="text-xs text-blue-500 mt-0.5">${escapeHtml(item.breakdown)}</div>`
+            : "";
+          // Tampilkan harga per satuan dasar dengan label unit
+          const unitLabel = item.unit ? ` /${escapeHtml(item.unit)}` : "";
           cartRow.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700 font-medium">${escapeHtml(item.name)}${nonbcBadge}</td>
+            <td class="px-6 py-4 text-sm text-slate-700 font-medium">${escapeHtml(item.name)}${nonbcBadge}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
               <div class="flex items-center justify-center gap-2">
                 <button type="button" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold transition-colors" data-action="minus" data-index="${index}">-</button>
@@ -330,8 +409,11 @@
                 <button type="button" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold transition-colors" data-action="plus" data-index="${index}">+</button>
               </div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700 text-right">${escapeHtml(formatRupiah(item.price))}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-emerald-600 text-right">${escapeHtml(formatRupiah(item.subtotal))}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700 text-right">${escapeHtml(formatRupiah(item.price))}${unitLabel ? `<span class="text-xs text-slate-400">${unitLabel}</span>` : ""}</td>
+            <td class="px-6 py-4 text-sm font-bold text-emerald-600 text-right">
+              ${escapeHtml(formatRupiah(item.subtotal))}
+              ${breakdownHtml}
+            </td>
             <td class="px-3 py-4 whitespace-nowrap text-center">
               <button type="button" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors" data-action="delete" data-index="${index}" title="Hapus item">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pointer-events-none"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
@@ -548,14 +630,18 @@
           return;
         }
 
-        state.cart.push({
+        const newItem = {
           product_id: product.id,
           name: product.name,
           name_struk: product.name_struk || product.name,
           price: Number(product.selling_price),
           qty: 1,
           subtotal: Number(product.selling_price),
-        });
+          unit: product.unit || "pcs",
+          packages: Array.isArray(product.packages) ? product.packages : [],
+        };
+        updateSubtotal(newItem);
+        state.cart.push(newItem);
       }
 
       renderCart();
@@ -1065,8 +1151,13 @@
         return;
       }
       const qty = Number(manualItemQty.value) || 0;
-      const subtotal = qty * Number(selectedNonbcProduct.selling_price);
-      nonbcSubtotal.textContent = formatRupiah(subtotal);
+      const result = calculateBundlePrice(
+        qty,
+        Number(selectedNonbcProduct.selling_price),
+        Array.isArray(selectedNonbcProduct.packages) ? selectedNonbcProduct.packages : [],
+        selectedNonbcProduct.unit || "pcs",
+      );
+      nonbcSubtotal.textContent = formatRupiah(result.total);
     }
 
     function resetManualItemForm() {
@@ -1146,16 +1237,19 @@
         existing.qty = qty;
         updateSubtotal(existing);
       } else {
-        state.cart.push({
+        const newItem = {
           product_id: product.id,
           name: product.name,
           name_struk: product.name_struk || product.name,
           price: price,
           qty: qty,
-          subtotal: qty * price,
+          subtotal: 0,
           unit: product.unit || "pcs",
+          packages: Array.isArray(product.packages) ? product.packages : [],
           is_non_barcode: true,
-        });
+        };
+        updateSubtotal(newItem);
+        state.cart.push(newItem);
       }
 
       closeManualItemModal();

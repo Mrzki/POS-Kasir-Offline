@@ -2,10 +2,47 @@ const db = require("../database/db");
 const crypto = require("crypto");
 
 /* ===============================
+   HELPER: Attach packages ke array products
+================================= */
+function attachPackagesToProducts(products) {
+  if (!products.length) return products;
+
+  const productIds = products.map((p) => p.id);
+  const placeholders = productIds.map(() => "?").join(",");
+
+  const allPackages = db
+    .prepare(
+      `
+      SELECT id, product_id, package_name, conversion_qty, price
+      FROM product_packages
+      WHERE product_id IN (${placeholders})
+      ORDER BY conversion_qty DESC
+    `,
+    )
+    .all(...productIds);
+
+  // Group packages by product_id
+  const packageMap = new Map();
+  for (const pkg of allPackages) {
+    if (!packageMap.has(pkg.product_id)) {
+      packageMap.set(pkg.product_id, []);
+    }
+    packageMap.get(pkg.product_id).push(pkg);
+  }
+
+  // Attach ke setiap product
+  for (const product of products) {
+    product.packages = packageMap.get(product.id) || [];
+  }
+
+  return products;
+}
+
+/* ===============================
    GET ALL PRODUCTS
 ================================= */
 function getAllProducts() {
-  return db
+  const products = db
     .prepare(
       `
       SELECT p.*, c.name AS category_name
@@ -15,13 +52,15 @@ function getAllProducts() {
     `,
     )
     .all();
+
+  return attachPackagesToProducts(products);
 }
 
 /* ===============================
    SEARCH PRODUCTS
 ================================= */
 function searchProducts(keyword) {
-  return db
+  const products = db
     .prepare(
       `
       SELECT p.*, c.name AS category_name
@@ -35,6 +74,8 @@ function searchProducts(keyword) {
     `,
     )
     .all(`%${keyword}%`, `%${keyword}%`, `%${keyword}%`, `%${keyword}%`);
+
+  return attachPackagesToProducts(products);
 }
 
 /* ===============================
@@ -50,6 +91,22 @@ function getCategories() {
     `,
     )
     .all();
+}
+
+/* ===============================
+   GET PACKAGES BY PRODUCT ID
+================================= */
+function getPackagesByProductId(productId) {
+  return db
+    .prepare(
+      `
+      SELECT id, product_id, package_name, conversion_qty, price
+      FROM product_packages
+      WHERE product_id = ?
+      ORDER BY conversion_qty DESC
+    `,
+    )
+    .all(productId);
 }
 
 /* ===============================
@@ -80,49 +137,85 @@ function generateSKU() {
 }
 
 /* ===============================
+   SAVE PACKAGES (helper internal)
+   Menghapus semua packages lama, lalu insert baru.
+================================= */
+function savePackages(productId, packages) {
+  // Hapus packages lama
+  db.prepare(`DELETE FROM product_packages WHERE product_id = ?`).run(productId);
+
+  if (!Array.isArray(packages) || !packages.length) return;
+
+  const insertStmt = db.prepare(
+    `
+    INSERT INTO product_packages (id, product_id, package_name, conversion_qty, price)
+    VALUES (?, ?, ?, ?, ?)
+  `,
+  );
+
+  for (const pkg of packages) {
+    const pkgName = (pkg.package_name || "").trim();
+    const convQty = parseInt(pkg.conversion_qty, 10);
+    const price = parseInt(pkg.price, 10);
+
+    // Skip baris yang tidak valid
+    if (!pkgName || !convQty || convQty <= 0 || !price || price <= 0) continue;
+
+    insertStmt.run(crypto.randomUUID(), productId, pkgName, convQty, price);
+  }
+}
+
+/* ===============================
    CREATE PRODUCT
 ================================= */
 function createProduct(data) {
-  const { no_sku, barcode, name, name_struk, category_id, selling_price, unit, min_stock, is_non_barcode } = data;
+  const { no_sku, barcode, name, name_struk, category_id, selling_price, unit, min_stock, is_non_barcode, packages } = data;
 
   const id = crypto.randomUUID();
   const sku = no_sku || generateSKU();
 
-  try {
-    db.prepare(
-      `
-      INSERT INTO products (
+  const createTransaction = db.transaction(() => {
+    try {
+      db.prepare(
+        `
+        INSERT INTO products (
+          id,
+          no_sku,
+          barcode,
+          name,
+          name_struk,
+          category_id,
+          selling_price,
+          unit,
+          min_stock,
+          is_non_barcode,
+          is_active
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+      `,
+      ).run(
         id,
-        no_sku,
-        barcode,
+        sku,
+        barcode || null,
         name,
-        name_struk,
-        category_id,
+        name_struk || name,
+        category_id || null,
         selling_price,
         unit,
-        min_stock,
-        is_non_barcode,
-        is_active
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
-    `,
-    ).run(
-      id,
-      sku,
-      barcode || null,
-      name,
-      name_struk || name,
-      category_id || null,
-      selling_price,
-      unit,
-      min_stock ?? 5,
-      is_non_barcode ? 1 : 0,
-    );
-  } catch (err) {
-    if (err.code === "SQLITE_CONSTRAINT_UNIQUE" && barcode) {
-      throw new Error(`Barcode "${barcode}" sudah digunakan oleh barang lain.`);
+        min_stock ?? 5,
+        is_non_barcode ? 1 : 0,
+      );
+    } catch (err) {
+      if (err.code === "SQLITE_CONSTRAINT_UNIQUE" && barcode) {
+        throw new Error(`Barcode "${barcode}" sudah digunakan oleh barang lain.`);
+      }
+      throw err;
     }
-    throw err;
-  }
+
+    // Simpan data kemasan (packages)
+    savePackages(id, packages);
+  });
+
+  createTransaction();
 
   return { id };
 }
@@ -131,41 +224,48 @@ function createProduct(data) {
    UPDATE PRODUCT
 ================================= */
 function updateProduct(id, data) {
-  const { barcode, name, name_struk, category_id, selling_price, unit, min_stock, is_non_barcode } = data;
+  const { barcode, name, name_struk, category_id, selling_price, unit, min_stock, is_non_barcode, packages } = data;
 
-  try {
-    db.prepare(
-      `
-      UPDATE products
-      SET
-        barcode = ?,
-        name = ?,
-        name_struk = ?,
-        category_id = ?,
-        selling_price = ?,
-        unit = ?,
-        min_stock = ?,
-        is_non_barcode = ?,
-        updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `,
-    ).run(
-      barcode || null,
-      name,
-      name_struk || name,
-      category_id || null,
-      selling_price,
-      unit,
-      min_stock ?? 5,
-      is_non_barcode ? 1 : 0,
-      id,
-    );
-  } catch (err) {
-    if (err.code === "SQLITE_CONSTRAINT_UNIQUE" && barcode) {
-      throw new Error(`Barcode "${barcode}" sudah digunakan oleh barang lain.`);
+  const updateTransaction = db.transaction(() => {
+    try {
+      db.prepare(
+        `
+        UPDATE products
+        SET
+          barcode = ?,
+          name = ?,
+          name_struk = ?,
+          category_id = ?,
+          selling_price = ?,
+          unit = ?,
+          min_stock = ?,
+          is_non_barcode = ?,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `,
+      ).run(
+        barcode || null,
+        name,
+        name_struk || name,
+        category_id || null,
+        selling_price,
+        unit,
+        min_stock ?? 5,
+        is_non_barcode ? 1 : 0,
+        id,
+      );
+    } catch (err) {
+      if (err.code === "SQLITE_CONSTRAINT_UNIQUE" && barcode) {
+        throw new Error(`Barcode "${barcode}" sudah digunakan oleh barang lain.`);
+      }
+      throw err;
     }
-    throw err;
-  }
+
+    // Update data kemasan (hapus lama, insert baru)
+    savePackages(id, packages);
+  });
+
+  updateTransaction();
 
   return true;
 }
@@ -210,6 +310,7 @@ module.exports = {
   getAllProducts,
   searchProducts,
   getCategories,
+  getPackagesByProductId,
   createProduct,
   updateProduct,
   toggleProductActive,

@@ -23,6 +23,10 @@
     const saveBtn = document.getElementById("save-product");
     const cancelBtn = document.getElementById("cancel-product");
 
+    // Dynamic packages elements
+    const packagesContainer = document.getElementById("packages-container");
+    const btnAddPackage = document.getElementById("btn-add-package");
+
     if (
       !body ||
       !searchInput ||
@@ -43,7 +47,9 @@
       !minStockInput ||
       !weighedCheckbox ||
       !saveBtn ||
-      !cancelBtn
+      !cancelBtn ||
+      !packagesContainer ||
+      !btnAddPackage
     ) {
       console.error("[Products] elemen wajib tidak ditemukan.");
       return () => {};
@@ -131,11 +137,29 @@
       });
     }
 
+    /* ===============================
+       BUILD PRICE DISPLAY STRING
+       Menggabungkan harga satuan dasar + harga kemasan
+       Contoh: "1 Botol: Rp3.000 | 1 Kardus: Rp65.000"
+    ================================= */
+    function buildPriceDisplay(product) {
+      const unit = product.unit || "pcs";
+      const parts = [`1 ${escapeHtml(unit)}: ${formatRupiah(product.selling_price)}`];
+
+      if (Array.isArray(product.packages)) {
+        for (const pkg of product.packages) {
+          parts.push(`1 ${escapeHtml(pkg.package_name)} (${pkg.conversion_qty} ${escapeHtml(unit)}): ${formatRupiah(pkg.price)}`);
+        }
+      }
+
+      return parts;
+    }
+
     function renderTable(products) {
       body.innerHTML = "";
 
       if (!products.length) {
-        body.innerHTML = `<tr><td colspan="8" class="px-6 py-8 text-center text-slate-400 italic">Tidak ada data barang.</td></tr>`;
+        body.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-slate-400 italic">Tidak ada data barang.</td></tr>`;
         return;
       }
 
@@ -152,6 +176,15 @@
             ? "bg-red-50 text-red-700 hover:bg-red-100 focus:ring-red-500" 
             : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 focus:ring-emerald-500";
 
+        // Build price display (unit + packages)
+        const priceParts = buildPriceDisplay(product);
+        const priceHtml = priceParts
+          .map((part, i) => {
+            if (i === 0) return `<div class="font-bold text-slate-700 text-sm">${part}</div>`;
+            return `<div class="text-xs text-blue-600 mt-0.5">${part}</div>`;
+          })
+          .join("");
+
         tr.innerHTML = `
           <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-mono">${escapeHtml(product.no_sku || "-")}</td>
           <td class="px-6 py-4">
@@ -160,8 +193,7 @@
           </td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-mono">${escapeHtml(product.barcode || "-")}</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600"><span class="px-2 py-1 bg-slate-100 rounded-md text-xs font-semibold">${escapeHtml(product.category_name || "-")}</span></td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-700">${formatRupiah(product.selling_price)}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 uppercase tracking-widest text-xs font-bold">${escapeHtml(product.unit || "-")}</td>
+          <td class="px-6 py-4 text-sm">${priceHtml}</td>
           <td class="px-6 py-4 whitespace-nowrap"><span class="px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider ${statusClass}">${statusLabel}</span></td>
           <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
             <div class="flex items-center justify-end gap-2">
@@ -182,6 +214,71 @@
       setBusy(state.isBusy);
     }
 
+    /* ===============================
+       DYNAMIC PACKAGES FORM LOGIC
+    ================================= */
+
+    function addPackageRow(pkg = null) {
+      const row = document.createElement("div");
+      row.className = "package-row flex items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-xl";
+
+      row.innerHTML = `
+        <input type="text" placeholder="Nama (cth: Dus)" value="${escapeHtml(pkg?.package_name || "")}"
+          class="pkg-name flex-1 min-w-0 px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all placeholder:font-medium placeholder:text-slate-400" />
+        <input type="number" placeholder="Isi" min="1" value="${pkg?.conversion_qty || ""}"
+          class="pkg-qty w-20 px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all placeholder:font-medium placeholder:text-slate-400 text-center" />
+        <input type="number" placeholder="Harga" min="0" value="${pkg?.price || ""}"
+          class="pkg-price w-28 px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all placeholder:font-medium placeholder:text-slate-400" />
+        <button type="button" class="btn-remove-package w-8 h-8 flex-none flex items-center justify-center rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors" title="Hapus kemasan">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="pointer-events-none"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      `;
+
+      packagesContainer.appendChild(row);
+    }
+
+    function removePackageRow(row) {
+      row.remove();
+    }
+
+    function clearPackages() {
+      packagesContainer.innerHTML = "";
+    }
+
+    function populatePackages(packages) {
+      clearPackages();
+      if (!Array.isArray(packages)) return;
+      for (const pkg of packages) {
+        addPackageRow(pkg);
+      }
+    }
+
+    function getPackagesFromForm() {
+      const rows = packagesContainer.querySelectorAll(".package-row");
+      const packages = [];
+
+      rows.forEach((row) => {
+        const name = row.querySelector(".pkg-name")?.value?.trim() || "";
+        const qty = parseInt(row.querySelector(".pkg-qty")?.value, 10);
+        const price = parseInt(row.querySelector(".pkg-price")?.value, 10);
+
+        // Hanya masukkan baris yang ada isinya
+        if (name && qty > 0 && price > 0) {
+          packages.push({
+            package_name: name,
+            conversion_qty: qty,
+            price: price,
+          });
+        }
+      });
+
+      return packages;
+    }
+
+    /* ===============================
+       MODAL OPEN / CLOSE / RESET
+    ================================= */
+
     function resetForm() {
       nameInput.value = "";
       nameStrukInput.value = "";
@@ -191,6 +288,7 @@
       unitSelect.value = "pcs";
       minStockInput.value = "";
       weighedCheckbox.checked = false;
+      clearPackages();
     }
 
     function openModal(product = null) {
@@ -209,6 +307,9 @@
         unitSelect.value = product.unit || "pcs";
         minStockInput.value = product.min_stock ?? 5;
         weighedCheckbox.checked = Boolean(product.is_non_barcode);
+
+        // Populate kemasan dari data product
+        populatePackages(product.packages);
         return;
       }
 
@@ -279,6 +380,8 @@
 
     function validateForm() {
       const sellingPrice = Number(priceInput.value);
+      const packages = getPackagesFromForm();
+
       const payload = {
         name: nameInput.value.trim(),
         name_struk: nameStrukInput.value.trim() || null,
@@ -288,6 +391,7 @@
         unit: unitSelect.value,
         min_stock: minStockInput.value !== "" ? parseInt(minStockInput.value, 10) : 5,
         is_non_barcode: weighedCheckbox.checked,
+        packages: packages,
       };
 
       if (!payload.name) {
@@ -372,6 +476,10 @@
       }
     }
 
+    /* ===============================
+       EVENT LISTENERS
+    ================================= */
+
     searchInput.addEventListener(
       "input",
       () => {
@@ -393,6 +501,27 @@
       "click",
       () => {
         openModal();
+      },
+      { signal },
+    );
+
+    // Dynamic packages: tambah baris
+    btnAddPackage.addEventListener(
+      "click",
+      () => {
+        addPackageRow();
+      },
+      { signal },
+    );
+
+    // Dynamic packages: hapus baris (delegated)
+    packagesContainer.addEventListener(
+      "click",
+      (event) => {
+        const removeBtn = event.target.closest(".btn-remove-package");
+        if (!removeBtn) return;
+        const row = removeBtn.closest(".package-row");
+        if (row) removePackageRow(row);
       },
       { signal },
     );

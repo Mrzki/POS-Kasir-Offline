@@ -118,4 +118,28 @@ try {
   // Column already exists — ignore
 }
 
+// Migration: create product_packages table for bundle/composite unit pricing
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS product_packages (
+      id TEXT PRIMARY KEY,
+      product_id TEXT NOT NULL,
+      package_name TEXT NOT NULL,
+      conversion_qty INTEGER NOT NULL,
+      price INTEGER NOT NULL,
+      FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+    )
+  `);
+
+  // Tambah index untuk query berdasarkan product_id
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_product_packages_product_id
+    ON product_packages(product_id)
+  `);
+
+  console.log("Migration: product_packages table ensured");
+} catch (migrationErr) {
+  console.error("Migration product_packages failed:", migrationErr.message);
+}
+
 module.exports = db;

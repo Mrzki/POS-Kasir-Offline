@@ -95,6 +95,20 @@ ipcMain.handle("find-product-by-barcode", (event, barcode) => {
       )
       .get(barcode);
 
+    if (product) {
+      // Attach data kemasan (product_packages)
+      product.packages = db
+        .prepare(
+          `
+          SELECT id, product_id, package_name, conversion_qty, price
+          FROM product_packages
+          WHERE product_id = ?
+          ORDER BY conversion_qty DESC
+        `,
+        )
+        .all(product.id);
+    }
+
     return product;
   } catch (error) {
     throw error;
@@ -103,7 +117,7 @@ ipcMain.handle("find-product-by-barcode", (event, barcode) => {
 
 ipcMain.handle("get-ecer-products", () => {
   try {
-    return db
+    const products = db
       .prepare(
         `
       SELECT *
@@ -114,6 +128,34 @@ ipcMain.handle("get-ecer-products", () => {
     `,
       )
       .all();
+
+    // Attach data kemasan ke setiap product
+    if (products.length) {
+      const ids = products.map((p) => p.id);
+      const placeholders = ids.map(() => "?").join(",");
+      const allPackages = db
+        .prepare(
+          `
+          SELECT id, product_id, package_name, conversion_qty, price
+          FROM product_packages
+          WHERE product_id IN (${placeholders})
+          ORDER BY conversion_qty DESC
+        `,
+        )
+        .all(...ids);
+
+      const pkgMap = new Map();
+      for (const pkg of allPackages) {
+        if (!pkgMap.has(pkg.product_id)) pkgMap.set(pkg.product_id, []);
+        pkgMap.get(pkg.product_id).push(pkg);
+      }
+
+      for (const p of products) {
+        p.packages = pkgMap.get(p.id) || [];
+      }
+    }
+
+    return products;
   } catch (error) {
     throw error;
   }
