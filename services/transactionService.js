@@ -66,6 +66,13 @@ function processSale(cartItems, paymentAmount) {
 
       let remainingQty = item.quantity;
 
+      // Bundle pricing: gunakan subtotal dari frontend jika tersedia,
+      // jika tidak, hitung secara standar (qty × selling_price).
+      const itemTotalSubtotal =
+        item.subtotal != null
+          ? item.subtotal
+          : item.quantity * item.selling_price;
+
       const batches = db
         .prepare(
           `
@@ -78,12 +85,31 @@ function processSale(cartItems, paymentAmount) {
         )
         .all(item.product_id);
 
+      // Track distribusi subtotal agar tidak ada selisih akibat pembulatan
+      let allocatedSubtotal = 0;
+      let processedQty = 0;
+
       for (const batch of batches) {
         if (remainingQty <= 0) break;
 
         const qtyFromBatch = Math.min(remainingQty, batch.quantity_remaining);
-        const subtotal = qtyFromBatch * item.selling_price;
-        const profit = (item.selling_price - batch.cost_price) * qtyFromBatch;
+        processedQty += qtyFromBatch;
+
+        // Distribusi subtotal proporsional ke setiap batch.
+        // Batch terakhir mendapat sisa agar total pas tanpa selisih pembulatan.
+        let subtotal;
+        if (remainingQty <= qtyFromBatch) {
+          // Batch terakhir — ambil sisa subtotal
+          subtotal = itemTotalSubtotal - allocatedSubtotal;
+        } else {
+          // Proporsi: (processedQty / totalQty) × totalSubtotal - yang sudah dialokasi
+          subtotal =
+            Math.round((itemTotalSubtotal * processedQty) / item.quantity) -
+            allocatedSubtotal;
+        }
+        allocatedSubtotal += subtotal;
+
+        const profit = subtotal - batch.cost_price * qtyFromBatch;
 
         totalAmount += subtotal;
         totalProfit += profit;

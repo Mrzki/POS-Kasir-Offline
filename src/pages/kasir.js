@@ -821,6 +821,7 @@
             product_id: item.product_id,
             quantity: item.qty,
             selling_price: item.price,
+            subtotal: item.subtotal,
             is_non_barcode: item.is_non_barcode || false,
             name: item.name_struk || item.name,
           })),
