@@ -410,34 +410,34 @@ ipcMain.handle("stock:delete-batch", (event, batchId) => {
 // open-report handler removed — reports are handled via SPA router
 
 // Transaction IPC
-    ipcMain.handle("get-transactions", (event, range = {}) => {
-      const { startDate, endDate } = resolveDateRange(range);
-    
-      return db
-        .prepare(
-          `
-          SELECT
-            t.id,
-            t.transaction_number,
-            t.total_amount,
-            t.created_at,
-            CASE
-              WHEN EXISTS (
-                SELECT 1
-                FROM transactions v
-                WHERE v.type = 'void'
-                  AND v.reference_transaction_id = t.id
-              ) THEN 1
-              ELSE 0
-            END AS is_voided
-          FROM transactions t
-          WHERE t.type = 'sale'
-            AND substr(datetime(t.created_at, '+7 hours'), 1, 10) BETWEEN ? AND ?
-          ORDER BY t.created_at DESC
-        `,
-        )
-        .all(startDate, endDate);
-    });
+ipcMain.handle("get-transactions", (event, range = {}) => {
+  const { startDate, endDate } = resolveDateRange(range);
+
+  return db
+    .prepare(
+      `
+      SELECT
+        t.id,
+        t.transaction_number,
+        t.total_amount,
+        t.created_at,
+        CASE
+          WHEN EXISTS (
+            SELECT 1
+            FROM transactions v
+            WHERE v.type = 'void'
+              AND v.reference_transaction_id = t.id
+          ) THEN 1
+          ELSE 0
+        END AS is_voided
+      FROM transactions t
+      WHERE t.type = 'sale'
+        AND substr(datetime(t.created_at, '+7 hours'), 1, 10) BETWEEN ? AND ?
+      ORDER BY t.created_at DESC
+    `,
+    )
+    .all(startDate, endDate);
+});
 
 
 // Sales report IPC
@@ -692,4 +692,8 @@ function openDashboardWindow() {
 app.whenReady().then(() => {
   Menu.setApplicationMenu(null);
   createWindow();
+});
+
+app.on('window-all-closed', () => {
+  app.quit();
 });

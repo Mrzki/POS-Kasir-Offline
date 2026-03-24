@@ -117,7 +117,7 @@ function getTopProducts(date, limit = 5) {
  * Produk dengan stok hampir habis (total_stock <= min_stock)
  * Hanya produk aktif yang ditampilkan
  */
-function getLowStockProducts(limit = 10) {
+function getLowStockProducts() {
   return db
     .prepare(
       `
@@ -134,10 +134,9 @@ function getLowStockProducts(limit = 10) {
     GROUP BY p.id, p.name, p.unit, p.min_stock
     HAVING total_stock <= p.min_stock
     ORDER BY total_stock ASC
-    LIMIT ?
   `,
     )
-    .all(limit);
+    .all();
 }
 
 module.exports = {
